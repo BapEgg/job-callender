@@ -1,0 +1,14 @@
+{
+  "name": "job-callender",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "test:visual": "node scripts/visual.mjs",
+    "test:interactions": "node scripts/test-interactions.mjs"
+  },
+  "dependencies": {"react": "19.3.0", "react-dom": "19.3.0"},
+  "devDependencies": {"@types/react": "^19.0.0", "@types/react-dom": "^19.0.0", "typescript": "7.0.2", "vite": "8.3.0", "@playwright/test": "^1.58.0", "pixelmatch": "^7.1.0", "pngjs": "^7.0.0"}
+}

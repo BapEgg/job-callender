@@ -1,0 +1,65 @@
+{
+  "file": "C:\\Users\\lkhej\\IdeaProjects\\job-callender\\artifacts\\visual\\jobs-768-reference.png",
+  "geometry": {
+    ".sidebar": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 75,
+        "height": 900,
+        "display": "flex",
+        "color": "rgb(203, 211, 215)",
+        "background": "rgb(21, 26, 29)",
+        "columns": "none",
+        "font": "Pretendard, \"Noto Sans CJK KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif"
+      }
+    ],
+    ".topbar": [
+      {
+        "x": 75,
+        "y": 0,
+        "width": 693,
+        "height": 67,
+        "display": "flex",
+        "color": "rgb(203, 211, 215)",
+        "background": "rgb(17, 21, 23)",
+        "columns": "none",
+        "font": "Pretendard, \"Noto Sans CJK KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif"
+      }
+    ],
+    ".page": [
+      {
+        "x": 75,
+        "y": 67,
+        "width": 693,
+        "height": 1744.828125,
+        "display": "block",
+        "color": "rgb(203, 211, 215)",
+        "background": "rgba(0, 0, 0, 0)",
+        "columns": "none",
+        "font": "Pretendard, \"Noto Sans CJK KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif"
+      }
+    ],
+    ".stats": [],
+    ".cols-main": [],
+    ".home-right": [],
+    ".table-wrap": [
+      {
+        "x": 98,
+        "y": 381.671875,
+        "width": 647,
+        "height": 1186.28125,
+        "display": "block",
+        "color": "rgb(203, 211, 215)",
+        "background": "rgba(0, 0, 0, 0)",
+        "columns": "none",
+        "font": "Pretendard, \"Noto Sans CJK KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif"
+      }
+    ],
+    ".writer": [],
+    ".question-nav": [],
+    ".editor-panel": [],
+    ".writer-aside": []
+  },
+  "errors": []
+}

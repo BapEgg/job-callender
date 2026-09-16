@@ -1,0 +1,193 @@
+{
+  "checkedAt": "2026-09-16T15:51:17.1143190Z",
+  "reviewer": "design_review independent read-only",
+  "sourceSHA256": "F1E964EE2428E8E5DA3505B313661639495A746DD9015767200B4E6BB13F3619",
+  "referenceFiles": [
+    {
+      "file": "baseline.json",
+      "length": 37256,
+      "sha256": "066761826E5A61A55DAC0728AEA3D357BA612839A5CFDA62661F071BF33F44AE"
+    },
+    {
+      "file": "home-1280-reference-viewport.png",
+      "length": 81937,
+      "sha256": "4AA0A9E9D4687542608F4735F8363DBE2B99AFEED22D94CE6C57743DCEE9EB2E"
+    },
+    {
+      "file": "home-1280-reference.json",
+      "length": 2894,
+      "sha256": "D7A1A3A7BF2833910C4473D78B997266E853E6311E723D0A8EF77C2A8313A390"
+    },
+    {
+      "file": "home-1280-reference.png",
+      "length": 130814,
+      "sha256": "12D60E678F30E849E962052598B1D622151917D2F5046CEFC5740258E0AB8795"
+    },
+    {
+      "file": "home-1440-reference-viewport.png",
+      "length": 83491,
+      "sha256": "8C3F1A7F668E1AD231E56154490C1EB5493EE7A0885CE223A790B90D44996FFE"
+    },
+    {
+      "file": "home-1440-reference.json",
+      "length": 2870,
+      "sha256": "9B551B81A9FD14234D43844BEDF3B7A31F23ACB30DEBC5B059B2C9518B6A1493"
+    },
+    {
+      "file": "home-1440-reference.png",
+      "length": 133171,
+      "sha256": "C17D72337BCE3C7B8EBABFB33A0B64A84E00FC0E46A38D46E6A655338B1EC52E"
+    },
+    {
+      "file": "home-390-reference-viewport.png",
+      "length": 39552,
+      "sha256": "BE35C217F9C018883CD5A856BF697C519ACF85EE837A85CD90BF132B8863F8D1"
+    },
+    {
+      "file": "home-390-reference.json",
+      "length": 2835,
+      "sha256": "4570B5C7905DC29BBE87BEF1A15249E64FE0FE0B0889F9A49A8FB310752D7545"
+    },
+    {
+      "file": "home-390-reference.png",
+      "length": 104704,
+      "sha256": "86A5D0D67674085D5762F318BA6FC401EFC42059257B16FDAED0FAE02D5610C1"
+    },
+    {
+      "file": "home-768-reference-viewport.png",
+      "length": 68044,
+      "sha256": "1267ADC2A7D0907D8ADE6CB83009B17447037AFD4F00423F537C3EAE3F10CA46"
+    },
+    {
+      "file": "home-768-reference.json",
+      "length": 2885,
+      "sha256": "AB179944338692FFB4C6FEA9B5300C7B87FA089241F398584B608D3707D3234A"
+    },
+    {
+      "file": "home-768-reference.png",
+      "length": 110866,
+      "sha256": "2A9E3C7E7FC5C050FE4002A0C09493E64AFAF727D6EAB5F3C6DB4CA31733A841"
+    },
+    {
+      "file": "jobs-1280-reference-viewport.png",
+      "length": 77581,
+      "sha256": "8CD8BF3A867AF6F4A4E2C1428E558CA6B9B67A8AA1E4BF6BE9A5372572592312"
+    },
+    {
+      "file": "jobs-1280-reference.json",
+      "length": 1769,
+      "sha256": "08F95A1167640D6A6AACFB8B60951FAD3276B5779A14E89E829E2C90EC37AF1D"
+    },
+    {
+      "file": "jobs-1280-reference.png",
+      "length": 141658,
+      "sha256": "DD9C07DD43A2AF7068F68DC96A1A0DBB29940539D055510F7D24BE6192DAAEEC"
+    },
+    {
+      "file": "jobs-1440-reference-viewport.png",
+      "length": 79161,
+      "sha256": "13E35E52C7F50411A683D23A03EB0ECFC2FA5CD33F794BA3B8F2A8F1C28F833A"
+    },
+    {
+      "file": "jobs-1440-reference.json",
+      "length": 1770,
+      "sha256": "55614D99FAD2E234CC5C814DC76904541D3A2598DB2DA2CC6D0F1B60B232AA8C"
+    },
+    {
+      "file": "jobs-1440-reference.png",
+      "length": 144602,
+      "sha256": "D2BC26C9051610CF5E354DBE355DDBD1F4F71C697554E89C70B0696C4B8F9893"
+    },
+    {
+      "file": "jobs-390-reference-viewport.png",
+      "length": 37512,
+      "sha256": "FB9D5DC5472BD87BEB6E9998B504518E154E5C9BF2066977BAE986045E579335"
+    },
+    {
+      "file": "jobs-390-reference.json",
+      "length": 1762,
+      "sha256": "7DE306041571AD10D990FC2FC10DE0CC77F30587D0D5E365646277A51DF7C033"
+    },
+    {
+      "file": "jobs-390-reference.png",
+      "length": 85200,
+      "sha256": "A69D7C8902E5D2A9C457150D435B8D86DBA71B94E77EE9316B69EF19BD176F9E"
+    },
+    {
+      "file": "jobs-768-reference-viewport.png",
+      "length": 61558,
+      "sha256": "246DA175C888615ADE14A31571464D4618CBC1F0C691F072C23BAF8696E431EF"
+    },
+    {
+      "file": "jobs-768-reference.json",
+      "length": 1762,
+      "sha256": "B1F204F12E52013A3BA12C3FEB10D464C654B426DCD85006C4CBC3179CEE0293"
+    },
+    {
+      "file": "jobs-768-reference.png",
+      "length": 120636,
+      "sha256": "DC21CA2D9714A6BAF1250F845A2CD6FFD2B6884F77950B01EFD5B439E4407222"
+    },
+    {
+      "file": "write-a1-1280-reference-viewport.png",
+      "length": 109183,
+      "sha256": "A00F1CAE7BD9A34C5A5A7270EF12F7D48642BB74721C1B3C51415D6E99943BC3"
+    },
+    {
+      "file": "write-a1-1280-reference.json",
+      "length": 2856,
+      "sha256": "27DBE8506921D31C8817171FEB463E257D125567199472786A368E6E34C067F4"
+    },
+    {
+      "file": "write-a1-1280-reference.png",
+      "length": 129536,
+      "sha256": "4DC7CD532276B458B5D1E3D34987B64604A463F7D9A91A9C7AAB2E603BACD654"
+    },
+    {
+      "file": "write-a1-1440-reference-viewport.png",
+      "length": 115440,
+      "sha256": "9EE79DBCB3F3801AC8C17F6D3CDEB562ACE3200494FA5913279DAE8344280FC0"
+    },
+    {
+      "file": "write-a1-1440-reference.json",
+      "length": 2857,
+      "sha256": "8D41AC35C1B43F92911E2844EC6DADAD78300018468786059E6038BA49ECB5E2"
+    },
+    {
+      "file": "write-a1-1440-reference.png",
+      "length": 133912,
+      "sha256": "D8039FB5F2C23E725A308C9D65779BE983A088A9C0404A1C8396FF5DB0C3B713"
+    },
+    {
+      "file": "write-a1-390-reference-viewport.png",
+      "length": 42388,
+      "sha256": "E6CF9AD341BCFED4CC078364B1BC6FDBBCD4E58629162BC2D0021210C3042608"
+    },
+    {
+      "file": "write-a1-390-reference.json",
+      "length": 2830,
+      "sha256": "8809414D5276DEB8190BC3524E13F640570AE0AD1A00759CCB338EE9C95FFA6A"
+    },
+    {
+      "file": "write-a1-390-reference.png",
+      "length": 99517,
+      "sha256": "E6869BEE050ADD3A4DBA37D381A46B1A73B6B1EA3164B9AB85B87935B01FD2F3"
+    },
+    {
+      "file": "write-a1-768-reference-viewport.png",
+      "length": 72679,
+      "sha256": "B38609019A87BB460FD9372024AF95CD9CB46C885EA326ED2E850E10E6F914FB"
+    },
+    {
+      "file": "write-a1-768-reference.json",
+      "length": 2844,
+      "sha256": "F63CEF2CE78B02E93EC09CA05A81B8633B0895CAAA9DF295B169C90915702929"
+    },
+    {
+      "file": "write-a1-768-reference.png",
+      "length": 114762,
+      "sha256": "F45CCF25FE717489BAF63DAE6285E81E2227DABE98CD8C3F78C97B26704A0352"
+    }
+  ],
+  "scope": "Metadata 12 cases and representative viewport images home-1440 / write-a1-390; no actual app validation yet"
+}

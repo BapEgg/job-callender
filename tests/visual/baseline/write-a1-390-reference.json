@@ -1,0 +1,101 @@
+{
+  "file": "C:\\Users\\lkhej\\IdeaProjects\\job-callender\\artifacts\\visual\\write-a1-390-reference.png",
+  "geometry": {
+    ".sidebar": [
+      {
+        "x": 0,
+        "y": 834,
+        "width": 390,
+        "height": 66,
+        "display": "flex",
+        "color": "rgb(203, 211, 215)",
+        "background": "rgb(23, 30, 33)",
+        "columns": "none",
+        "font": "Pretendard, \"Noto Sans CJK KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif"
+      }
+    ],
+    ".topbar": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 57,
+        "display": "flex",
+        "color": "rgb(203, 211, 215)",
+        "background": "rgb(17, 21, 23)",
+        "columns": "none",
+        "font": "Pretendard, \"Noto Sans CJK KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif"
+      }
+    ],
+    ".page": [
+      {
+        "x": 0,
+        "y": 57,
+        "width": 390,
+        "height": 2036.375,
+        "display": "block",
+        "color": "rgb(203, 211, 215)",
+        "background": "rgba(0, 0, 0, 0)",
+        "columns": "none",
+        "font": "Pretendard, \"Noto Sans CJK KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif"
+      }
+    ],
+    ".stats": [],
+    ".cols-main": [],
+    ".home-right": [],
+    ".table-wrap": [],
+    ".writer": [
+      {
+        "x": 15,
+        "y": 351.171875,
+        "width": 360,
+        "height": 1576.265625,
+        "display": "grid",
+        "color": "rgb(203, 211, 215)",
+        "background": "rgba(0, 0, 0, 0)",
+        "columns": "360px",
+        "font": "Pretendard, \"Noto Sans CJK KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif"
+      }
+    ],
+    ".question-nav": [
+      {
+        "x": 15,
+        "y": 386.359375,
+        "width": 360,
+        "height": 107.390625,
+        "display": "flex",
+        "color": "rgb(203, 211, 215)",
+        "background": "rgb(25, 31, 35)",
+        "columns": "none",
+        "font": "Pretendard, \"Noto Sans CJK KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif"
+      }
+    ],
+    ".editor-panel": [
+      {
+        "x": 15,
+        "y": 556.9375,
+        "width": 360,
+        "height": 651.1875,
+        "display": "block",
+        "color": "rgb(203, 211, 215)",
+        "background": "rgb(25, 31, 35)",
+        "columns": "none",
+        "font": "Pretendard, \"Noto Sans CJK KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif"
+      }
+    ],
+    ".writer-aside": [
+      {
+        "x": 15,
+        "y": 1368.71875,
+        "width": 360,
+        "height": 558.71875,
+        "display": "grid",
+        "color": "rgb(203, 211, 215)",
+        "background": "rgba(0, 0, 0, 0)",
+        "columns": "360px",
+        "font": "Pretendard, \"Noto Sans CJK KR\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif"
+      }
+    ]
+  },
+  "errors": []
+}
