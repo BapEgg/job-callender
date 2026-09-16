@@ -21,7 +21,7 @@
 - Windows PC, Docker Desktop. DB와 개발 웹은 Docker Compose로 운영할 방향.
 - PostgreSQL이 영구 데이터의 기준. 브라우저 localStorage가 실제 데이터 원장이 되어서는 안 된다.
 - GPT: 사용자가 Codex 로그인 및 GPT-6 Astra / Medium 설정을 확인했다. 실행 시 실제 계정·모델 설정을 재확인하고 임의로 다른 모델로 바꾸지 않는다.
-- Google: 사용자가 설치한 구독용 CLI에서 웹검색 결과 3건 수신을 확인했다. Antigravity/Gemini의 실제 실행 파일·옵션은 설치본 도움말에서 확인한다. 기억에 의존해 명령을 작성하지 않는다.
+- Google: 최신 사용자 정정에 따라 검색 성공 이력은 없다. 사용자는 PowerShell에서 agy 실행 후 로그인까지만 완료했다. Antigravity/Gemini의 실제 실행 파일·옵션은 설치본 도움말에서 확인한다. 기억에 의존해 명령을 작성하지 않는다.
 - 두 CLI는 기존 로그인한 호스트 PC에서 실행한다. 기존 ChatGPT 데스크톱 채팅창 조작이나 일반 유료 API 호출을 뜻하지 않는다.
 - Docker 자동 시작, 개인 Slack 워크스페이스와 #job-alerts 채널 생성은 사용자가 완료했다.
 - Slack Incoming Webhook 생성·전송 성공은 확인되지 않았다. 비밀 주소는 채팅에 붙여넣게 하지 말고 사용자 PC의 비공개 설정으로 받는다.

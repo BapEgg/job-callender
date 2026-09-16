@@ -7,8 +7,26 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "test:visual": "node scripts/visual.mjs",
-    "test:interactions": "node scripts/test-interactions.mjs"
+    "test:interactions": "node scripts/test-interactions.mjs",
+    "test": "node --test tests/domain.test.mjs tests/runner.test.mjs",
+    "test:visual:all": "node scripts/visual-all.mjs",
+    "test:api": "node tests/api.integration.mjs",
+    "test:ui": "node scripts/test-ui.mjs",
+    "start": "node server/main.mjs"
   },
-  "dependencies": {"react": "19.3.0", "react-dom": "19.3.0"},
-  "devDependencies": {"@types/react": "^19.0.0", "@types/react-dom": "^19.0.0", "typescript": "7.0.2", "vite": "8.3.0", "@playwright/test": "^1.58.0", "pixelmatch": "^7.1.0", "pngjs": "^7.0.0"}
+  "dependencies": {
+    "pg": "^8.23.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "pixelmatch": "^7.1.0",
+    "pngjs": "^7.0.0",
+    "prettier": "^3.9.7",
+    "typescript": "7.0.2",
+    "vite": "8.3.0"
+  }
 }
