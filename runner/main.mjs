@@ -21,11 +21,20 @@ const slackApproved =
 if (!token) throw Error("Private runner token is not configured.");
 const codex = process.env.JOBPREP_CODEX_EXE,
   agy = process.env.JOBPREP_AGY_EXE;
+const googleRedirectApproved =
+  (process.env.JOBPREP_GOOGLE_REDIRECT_APPROVED ||
+    privateConfig
+      .match(/^JOBPREP_GOOGLE_REDIRECT_APPROVED=(.+)$/m)?.[1]
+      .trim()) === "true";
 // Capabilities must be explicitly enabled after a successful subscription-login probe.
 const capabilities = {
   draft: !!codex && process.env.JOBPREP_CODEX_VERIFIED === "true",
   questions: !!codex && process.env.JOBPREP_CODEX_VERIFIED === "true",
-  search: !!agy && process.env.JOBPREP_SEARCH_VERIFIED === "true",
+  search:
+    !!agy &&
+    (process.env.JOBPREP_SEARCH_VERIFIED ||
+      privateConfig.match(/^JOBPREP_SEARCH_VERIFIED=(.+)$/m)?.[1].trim()) ===
+      "true",
   slack: !!slackWebhook && slackApproved,
 };
 async function api(route, data = {}) {
@@ -72,7 +81,9 @@ try {
           result = !capabilities[task.type]
             ? { errorCode: "UNSUPPORTED" }
             : task.type === "search"
-              ? await searchJobs(task, agy, cancellation.signal)
+              ? await searchJobs(task, agy, cancellation.signal, {
+                  googleRedirectApproved,
+                })
               : await draftOrQuestions(task, codex, cancellation.signal);
         } finally {
           clearInterval(pulse);

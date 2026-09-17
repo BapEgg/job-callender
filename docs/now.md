@@ -49,7 +49,7 @@
 - 자료 파일은 1MB PDF/TXT/MD/DOCX 보관·다운로드 지원. 파일 내용 자동 추출 성공으로 표시하지 않는다.
 
 ## 다음 작업 하나
-Google CLI의 검색 결과에서 직접 원문 URL을 안정적으로 확보하는 단계를 해결한다. 현재 모집 공고의 수동 발견→원문 검증→DB→Slack은 완료했지만 자동 검색의 전체 인수는 미완료다. 자동 수집은 계속 꺼져 있다.
+PDF 등 원본 내용 추출을 구현하고, 실제 사용자 경험 기반 작성→검토→제출본→질문 흐름을 검증한다. 원티드 자동 검색→원문 검증→DB→Slack의 실제 첫 인수는 아래 2026-09-17 기록처럼 완료했다.
 
 ## 사용자 요청 반영 — 프로필 선택 목록 (2026-09-17)
 - 주요 기술/희망 지역/제외·확인 조건에 복수 선택 목록 추가. 최초 설정과 기본 프로필에 공통 적용. 직접 입력과 기존 문자열 저장 계약 유지, 자동 선택 없음.
@@ -93,3 +93,18 @@ Google CLI의 검색 결과에서 직접 원문 URL을 안정적으로 확보하
 - 독립 검토에서 실제 AGY stream의 nested result 형식, 날짜 offset, 고용조건 및 같은 날짜의 시각 충돌 결함을 발견해 수정. 단위14개 통과. 검토 증거 artifacts/qa/posting-source-review.md 및 posting-source-recheck.json. 실제 Google CLI 추가 호출은 1회 제한 내 수행 후 중단.
 - 이번 Google CLI 후보 탐색은 검색 결과가 Google grounding redirect URL로 제공되어 원문 URL 확보 실패 및 INTERNAL500으로 BLOCKED. 전역 권한 확대/유료API 대체/반복 재시도 없음. 웹 검색의 이전 후보5건도 원문에서는 전부 마감/비공개여서 저장 안 함.
 - 잔여: Google 후보 URL 확보·전체 자동수집 인수, 자동 merge에서 같은 URL의 회사/제목 변경 시 중복 가능성(기존 코드, 실제 재현 미실행), 관련 자료 검색. 실행 중 runner는 search=false이며 새 검증 코드는 다음 시작부터 로드된다.
+
+## Google 검색 후보 주소 확보 (2026-09-17 후속)
+- 검색과 원문 검증을 분리해 실제 AGY search_web 1회 성공(status SUCCESS/권한거부0). 반환 URL 그대로 출력하도록 지시해 후보5건 확보. 전부 Google grounding redirect URL이며 현재 모집 여부는 미검증. 증거 artifacts/automation/candidate-links-probe.json.
+- runner/search-candidates.mjs에 실제 nested stream 파싱, 검색 실행 근거 확인, 후보5개 제한·중복 제거, 정확한 Wanted/Google 경로 제한 추가. 후보를 확인된 공고로 반환하지 않는다.
+- Google 중간서버는 기존 두 도메인 승인 밖이므로 사용자에게 `/grounding-api-redirect/` 이동주소 읽기 허용 요청 중. 전역 CLI 설정 변경은 요청하지 않음. resolver는 기본 승인false로 네트워크 요청 차단; 승인true여도 1회 수동 redirect 응답의 Location만 읽으며 목적지가 정확한 Wanted 공고 URL이 아니면 거부. 아직 실제 호출·제품 어댑터 연결 안 함.
+- 독립 검토에서 tool 오류를 terminal SUCCESS가 가리는 사례를 발견해 오류 이벤트 거부 검사 추가. 단위19개 통과(기존14+신규5). 사용자 답변 전에는 Google 중간주소 네트워크 읽기, 자동수집 활성화, 신규 DB 저장·Slack 전송을 실행하지 않는다. 이번 준비 변경은 로컬 작업본이며 아직 커밋/push하지 않음.
+
+## Google 이동주소 승인 후 자동 수집 인수 완료 (2026-09-17)
+- 중간 링크 의미를 설명한 뒤 사용자가 `응`으로 읽기 승인. 정확한 Google grounding-api-redirect 경로에서 Location만 읽고, 최종 Wanted 공고 URL만 원문 검증. 전역 Google CLI 권한은 변경하지 않음. private .env에 JOBPREP_GOOGLE_REDIRECT_APPROVED=true 저장, 예제는 false.
+- 기존 검색 후보5건은 이동주소 확보 성공, 전부 SOURCE_NOT_OPEN으로 제외. 최신성 검색 조건(현재 연도/최근90일 검색 기준)을 추가한 실제 어댑터 시험은 한국이에스지데이터의 2026-09-15 공고1건 검증 성공, 나머지4건은 마감/경력 불일치 제외. 이 진단 결과 자체는 DB에 넣지 않음.
+- 실제 실행기 재시작 후 오늘 작업큐→Google CLI→이동주소→원문→DB→Slack 전체 성공. task e1c4ac02-6560-43d6-b31a-d4f0317bba47 succeeded, 신규1/변경0, revision5, lastSuccessDate=2026-09-17, Slack sent. 증거 artifacts/automation/automatic-search-db-slack.json.
+- 실제 저장 공고: 크레바스에이아이 `[인턴] 서버 개발자`, https://www.wanted.co.kr/wd/377832, 게시2026-09-15, 서울 동대문구, 신입 지원 가능. 마감 미기재→unknown. 사용자의 현재 직무는 빈 값이고 인턴 제외 조건도 없어 포함. 모든 희망 직무/조건 조합의 정확성을 검증한 것은 아님.
+- runner/main.mjs가 private SEARCH_VERIFIED/GOOGLE_REDIRECT_APPROVED를 읽고 scripts/start-runner.ps1이 실제 agy 경로 전달. 현재 host runner session20510, search/draft/questions/slack=true. OS 자동 시작 등록은 아님. 오늘 중복키는 유지하여 재시작 시 같은 검색을 재생성하지 않음.
+- 단위19개 PASS 및 독립 읽기 검토 PASS. 자동 원문 검증은 Wanted만 지원, 미지원 조건은 검토 필요로 실패 처리. 검색의 최근90일은 검색 힌트이며 신선도 보증이 아님; 모집 상태는 별도 실제 원문 검사. 후보 전부 부적격이면 SEARCH_FAILED로 남기며 가짜 성공0건을 기록하지 않음.
+- 남은 품질 보강: 동일 URL 제목 변경 시 기존 자동merge 중복 가능성, 기업/후기/학습자료 검색, 다양한 조건 지원. 최초 실제 자동수집 인수와 장기간 운영 검증은 구분한다.
