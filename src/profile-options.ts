@@ -1,5 +1,19 @@
 // Optional suggestions only. Nothing is selected or treated as a hard constraint by default.
 export const profileOptions = {
+  role: [
+    "백엔드 개발자",
+    "프런트엔드 개발자",
+    "풀스택 개발자",
+    "웹 개발자",
+    "앱 개발자",
+    "데이터 엔지니어",
+    "데이터 분석가",
+    "AI·ML 엔지니어",
+    "DevOps·인프라",
+    "QA 엔지니어",
+    "보안 엔지니어",
+    "게임 개발자",
+  ],
   skills: [
     "Java",
     "Spring Boot",

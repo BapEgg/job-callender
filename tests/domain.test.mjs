@@ -138,3 +138,23 @@ test("No submission state without snapshot, missing profile or impossible date",
   next.jobs[0].deadline = "2026-02-30";
   assert.throws(() => validateState(next, old), /마감 날짜/);
 });
+import { verifiedOpenPosting } from "../server/domain.mjs";
+test("automatic collection requires current evidence and rejects stale rolling labels", () => {
+  const now = new Date("2026-09-17T10:00:00+09:00");
+  const confirmed = {
+    currentStatus: "open",
+    statusEvidence: "원문 접수중",
+    verifiedAt: now.toISOString(),
+    closeType: "rolling",
+    deadline: null,
+  };
+  assert.equal(verifiedOpenPosting(confirmed, now), true);
+  for (const change of [
+    { deadline: "2024-04-15" },
+    { statusConflict: true },
+    { currentStatus: "unknown" },
+    { statusEvidence: "" },
+    { verifiedAt: "2026-09-16T00:00:00+09:00" },
+  ])
+    assert.equal(verifiedOpenPosting({ ...confirmed, ...change }, now), false);
+});

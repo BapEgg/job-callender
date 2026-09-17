@@ -4,6 +4,7 @@ import { AppProvider, useApp } from "./state";
 import { Shell, HomePage, JobsPage, WriterPage } from "./pages";
 import { createScreens } from "./screens";
 import "./styles.css";
+import "./profile-picker.css";
 function App() {
   const context = useApp();
   const { route, act, state, ui, onInput, form, today, fixture, user, loaded } =

@@ -6,10 +6,18 @@ const base = process.env.JOBPREP_URL || "http://127.0.0.1:3000";
 if (!/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(base))
   throw Error("Runner only connects to a loopback service.");
 let token = process.env.RUNNER_TOKEN;
-if (!token) {
-  const text = await fs.readFile(new URL("../.env", import.meta.url), "utf8");
-  token = text.match(/^RUNNER_TOKEN=(.+)$/m)?.[1].trim();
-}
+const privateConfig = await fs.readFile(
+  new URL("../.env", import.meta.url),
+  "utf8",
+);
+token ||= privateConfig.match(/^RUNNER_TOKEN=(.+)$/m)?.[1].trim();
+const slackWebhook =
+  process.env.SLACK_WEBHOOK ||
+  privateConfig.match(/^SLACK_WEBHOOK=(.+)$/m)?.[1].trim();
+const slackApproved =
+  (process.env.JOBPREP_SLACK_APPROVED ||
+    privateConfig.match(/^JOBPREP_SLACK_APPROVED=(.+)$/m)?.[1].trim()) ===
+  "true";
 if (!token) throw Error("Private runner token is not configured.");
 const codex = process.env.JOBPREP_CODEX_EXE,
   agy = process.env.JOBPREP_AGY_EXE;
@@ -18,6 +26,7 @@ const capabilities = {
   draft: !!codex && process.env.JOBPREP_CODEX_VERIFIED === "true",
   questions: !!codex && process.env.JOBPREP_CODEX_VERIFIED === "true",
   search: !!agy && process.env.JOBPREP_SEARCH_VERIFIED === "true",
+  slack: !!slackWebhook && slackApproved,
 };
 async function api(route, data = {}) {
   const r = await fetch(base + route, {
@@ -80,17 +89,11 @@ try {
       console.error("Runner unavailable; will check again in 30 seconds.");
     }
     // Enable only after the user's separate actual-message approval. Secrets remain host-only.
-    if (
-      process.env.JOBPREP_SLACK_APPROVED === "true" &&
-      process.env.SLACK_WEBHOOK
-    ) {
+    if (slackApproved && slackWebhook) {
       try {
         const { notification } = await api("/api/runner/notifications/claim");
         if (notification) {
-          const status = await deliver(
-            process.env.SLACK_WEBHOOK,
-            notification.payload,
-          );
+          const status = await deliver(slackWebhook, notification.payload);
           await api("/api/runner/notifications/complete", {
             userId: notification.userId,
             key: notification.key,

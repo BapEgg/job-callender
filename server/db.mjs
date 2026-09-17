@@ -4,6 +4,10 @@ export const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   max: 8,
 });
+// A restarted local DB invalidates idle connections; the pool replaces them.
+pool.on("error", (error) =>
+  console.error("database connection interrupted", error.code || error.name),
+);
 export async function migrate() {
   await pool.query(
     await fs.readFile(

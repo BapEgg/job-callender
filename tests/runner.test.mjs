@@ -100,3 +100,51 @@ test("Slack allows only two product categories, escapes mentions", () => {
     /신규 0건/,
   );
 });
+import { parseSearchOutput } from "../runner/adapters.mjs";
+test("search terminal SUCCESS cannot hide denied reading or expired jobs", () => {
+  const read = {
+    event: "step_update",
+    step_update: {
+      step_type: "tool",
+      state: "DONE",
+      tool_info: { name: "read_url_content" },
+    },
+  };
+  const output = (jobs, extra = {}) =>
+    [
+      read,
+      {
+        event: "result",
+        status: "SUCCESS",
+        response: JSON.stringify({ jobs }),
+        ...extra,
+      },
+    ]
+      .map((x) => JSON.stringify(x))
+      .join("\n");
+  assert.equal(
+    parseSearchOutput(output([{ deadline: "2024-04-15" }])).errorCode,
+    "SEARCH_FAILED",
+  );
+  assert.equal(
+    parseSearchOutput(
+      output([{ deadline: null }], { denied_actions: ["read_url"] }),
+    ).errorCode,
+    "SEARCH_FAILED",
+  );
+  assert.equal(parseSearchOutput(output([])).errorCode, "SEARCH_FAILED");
+  assert.equal(
+    parseSearchOutput(
+      JSON.stringify({
+        status: "SUCCESS",
+        response: JSON.stringify({ jobs: [{ deadline: null }] }),
+      }),
+    ).errorCode,
+    "SEARCH_FAILED",
+  );
+  assert.equal(
+    parseSearchOutput(output([{ deadline: null, closeType: "rolling" }])).result
+      .jobs.length,
+    1,
+  );
+});

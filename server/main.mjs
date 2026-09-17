@@ -12,6 +12,7 @@ import {
   kstDate,
   publicURL,
   deadlineNotifications,
+  verifiedOpenPosting,
 } from "./domain.mjs";
 import {
   passwordHash,
@@ -114,6 +115,7 @@ async function runnerAPI(req, res, url) {
               skills: row.data.profile.skills,
               region: row.data.profile.region,
               exclusions: row.data.profile.exclusions,
+              role: row.data.profile.role,
             },
           };
           // One current-day key; never replay missed calendar dates or reset failed attempts.
@@ -187,6 +189,7 @@ async function runnerAPI(req, res, url) {
       search: b.capabilities?.search === true,
       draft: b.capabilities?.draft === true,
       questions: b.capabilities?.questions === true,
+      slack: b.capabilities?.slack === true,
     };
     await pool.query(
       "INSERT INTO runner_status(id,seen_at,capabilities) VALUES(1,now(),$1) ON CONFLICT(id) DO UPDATE SET seen_at=now(),capabilities=$1",
@@ -271,6 +274,10 @@ async function runnerAPI(req, res, url) {
         result = {
           jobs: b.result.jobs.map((j) => {
             demand(
+              verifiedOpenPosting(j),
+              "현재 모집 여부를 확인하지 못했거나 마감된 공고는 자동 수집할 수 없습니다.",
+            );
+            demand(
               typeof j.company === "string" &&
                 typeof j.title === "string" &&
                 publicURL(j.url),
@@ -307,6 +314,8 @@ async function runnerAPI(req, res, url) {
               new: true,
               firstDiscoveredAt: new Date().toISOString(),
               lastVerifiedAt: j.verifiedAt,
+              currentStatus: j.currentStatus,
+              statusEvidence: j.statusEvidence,
               lastAttemptAt: new Date().toISOString(),
             };
           }),
@@ -487,6 +496,10 @@ async function api(req, res, url) {
     const { rows } = await pool.query(
       "SELECT seen_at,capabilities FROM runner_status WHERE id=1 AND seen_at>now()-interval '90 seconds'",
     );
+    const deliveries = await pool.query(
+      "SELECT status,attempted_at FROM notification_records WHERE user_id=$1 AND attempted_at IS NOT NULL ORDER BY attempted_at DESC LIMIT 1",
+      [user.id],
+    );
     return send(res, 200, {
       runner: !!rows[0],
       lastSeen: rows[0]?.seen_at || null,
@@ -495,7 +508,10 @@ async function api(req, res, url) {
         draft: false,
         questions: false,
       },
-      slack: "unverified",
+      slack:
+        deliveries.rows[0]?.status ||
+        (rows[0]?.capabilities?.slack ? "ready" : "unconfigured"),
+      slackLastAttempt: deliveries.rows[0]?.attempted_at || null,
     });
   }
   if (req.method === "POST" && url.pathname === "/api/auth/logout") {
@@ -584,6 +600,7 @@ async function api(req, res, url) {
             skills: s.data.profile.skills,
             region: s.data.profile.region,
             exclusions: s.data.profile.exclusions,
+            role: s.data.profile.role,
           },
         };
       else {

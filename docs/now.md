@@ -9,7 +9,7 @@
 ## 구현과 기술 선택
 - React 19.3 / TypeScript 7 / Vite 8.3. 원본 DOM/CSS/SVG를 JSX로 이식. 원본 CSS 내용 동일. iframe/raw HTML 주입 없음.
 - Node HTTP + pg + PostgreSQL 18.6. 개인용 편집 상태는 소유자별 JSONB/revision/history로 보존하고 제출본·세션·파일·작업·알림은 별도 테이블로 강제한다. 화면 단위 잦은 저장과 불변 제출본을 작게 구현하기 위한 선택.
-- Docker Compose 웹/API/DB. DB 외부 포트 없음, 웹은 loopback 3000. 시험은 별도 compose.test.yaml/DB/첨부 볼륨/3001. 실제 3000 계정은 사용자가 만든다.
+- Docker Compose 웹/API/DB. DB는 DBeaver용 loopback 5433만 허용, 웹은 loopback 3000. 시험은 별도 compose.test.yaml/DB/첨부 볼륨/3001. 실제 3000 계정은 사용자가 만든다.
 - 일반 계정/scrypt/HttpOnly 세션/CSRF·origin 검사/속도 제한/소유자 격리. 최초 실제 계정 하나만 가입 가능.
 - 15화면 라우팅, 기본·지원별 프로필, 공고/문항/경험/메모/일정/전형, 문항 분량, 변경 revision 충돌 보존, 확인 후 불변 제출본, 파일 보존, 버전 복원.
 - 실제 모드는 빈 데이터부터 시작. 시안 검증은 ?fixture=1에서만 샘플 사용. 실제 개인 데이터는 PostgreSQL에 저장한다.
@@ -55,3 +55,20 @@ Google CLI의 빈 최종 출력 계약을 해결한 뒤 실제 사용자 경험 
 - 주요 기술/희망 지역/제외·확인 조건에 복수 선택 목록 추가. 최초 설정과 기본 프로필에 공통 적용. 직접 입력과 기존 문자열 저장 계약 유지, 자동 선택 없음.
 - 사용자 승인에 따른 해당 입력 영역의 시각 변경이다. 원본 HTML/CSS는 수정하지 않음. 기존 60개 픽셀 비교 결과는 이 변경 이전 기준이며 onboarding/data의 새 선택 목록에는 적용하지 않는다.
 - scripts/test-profile-options.mjs: 기술 선택/해제·대소문자 중복 방지·직접입력 보존·지역/조건 선택·390px 넘침·페이지오류 검사 PASS. TypeScript 및 Docker 빌드 통과.
+
+## 사용자 확인 후 실제 운영 검증 (2026-09-17)
+- DBeaver용 loopback 127.0.0.1:5433→DB5432 연결. jobprep DB/user로 TCP 인증 접속 성공. 자세한 저장 위치/읽기 SQL은 docs/data-storage.md.
+- PDF는 job-callender_attachments 볼륨(/data/files), 메타데이터 files, 원본 연결 sources, 메모·외부AI답변 notes(JSONB). DB 재연결 중 idle pg connection 오류로 웹이 종료되는 현상을 발견하여 pool error 처리 추가; 격리 DB restart 후 web health200 검증.
+- UI: 직무 선택/직접입력 저장, 목록 접기·선택개수, 조건 그룹화. 실제 설정의 개인 실행기는 PC에서 CLI를 실행하는 프로그램으로 설명. 시연 버튼은 실제 검색 요청/연결 재조회/작업기록으로 교체. 1440/390 및 실제3001 UI·저장 검증 PASS.
+- 사용자 제공 Webhook을 git 제외 .env에 저장. 명시적으로 표시된 Slack 연결 시험 1회 전송, HTTP 성공+응답 ok 및 DB sent 기록 확인. 호스트에서 Slack 활성화, 매일 갱신요약/미제출 D-1·당일 두 종류 정책 유지. API 상태는 하드코드 미검증 대신 실제 마지막 발송 결과.
+- 사용자의 정확한 추가 승인 후 Google 전역 settings에 read_url(echomarketing.career.greetinghr.com), read_url(www.wanted.co.kr) 두 규칙만 추가. 전체경로/하위도메인 지속허용 범위를 명시해 승인받았고 원본을 원파일 옆 private backup, 나머지 설정 보존 확인.
+- AGY의 짧은 timeout/출력 문제는 bounded search+low effort+5m+stream-json으로 조사. 지정 URL 읽기 성공. 마지막 진단에서는 검색 후보1건/원문읽기1건의 권한 거부가 없었으나 JavaScript 원문·모집상태 검증 불가여서 search capability는 아직 false.
+- 실제원문 https://www.wanted.co.kr/wd/215128 : UI 상시채용과 실제 JobPosting validThrough 2024-04-15 충돌. AGY 응답을 별도 HTTP200 JSON-LD 추출로 대조 완료. 원문 최소정보 1건을 마감 공고로 실제 DB에 보존(신규 모집0건). 자동검색 성공/오늘 갱신성공으로 기록하지 않음. 실제 요약 알림은 마감 확인 문구와 원문 링크를 포함해 큐 등록 후 host runner가 전송, DB sent 확인.
+- 단위11, API9, 프로필·설정 UI, DB 재연결 검증 통과. 실제 사용자자료 삭제·자동시작 등록·main변경 없음.
+
+## 수집 품질에 대한 사용자 지적과 수정
+- 2024년 공고를 실제 일반목록에 넣어 흐름검증한 것은 현재구직용 결과와 검증자료 분리가 미흡한 처리였다. 테스트 더미가 아니라 실제 과거공고였으며 최신공고 확보 성공이 아니다.
+- 해당 정확한 imported URL의 collectionState를 diagnostic으로 바꾸고 new=false. 상태이력과 자료는 보존하되 일반 홈/공고 목록에는 노출하지 않는다. 이미 전송한 마감 확인 요약은 취소하지 않았다.
+- 검색을 특정 공고 제목으로 고정하지 않았다. 사용자 조건은 신입·서울경기·기술 선호이며 role은 사용자 선택값이다.
+- 자동수집 서버/adapter 양쪽에 당일확인+currentStatus=open+접수근거+마감미경과+충돌없음 검증 추가. 기존 '상시채용' 표시와 과거명시기한이 충돌하면 실패. 자동검색은 여전히 false이며 실제모집 공고 확보 인수 미완료.
+- 단위12 PASS. 아직 자동수집 운영준비완료가 아니므로 그처럼 보고하지 않는다.

@@ -45,6 +45,27 @@ export function deadlineState(job, now = new Date()) {
         : `D-${days}`,
   };
 }
+export function verifiedOpenPosting(job, now = new Date()) {
+  if (
+    job.currentStatus !== "open" ||
+    typeof job.statusEvidence !== "string" ||
+    !job.statusEvidence.trim()
+  )
+    return false;
+  if (
+    !job.verifiedAt ||
+    !Number.isFinite(Date.parse(job.verifiedAt)) ||
+    kstDate(new Date(job.verifiedAt)) !== kstDate(now)
+  )
+    return false;
+  // A past explicit deadline wins over a stale 'rolling' label.
+  if (job.deadline) {
+    const deadline = deadlineState({ ...job, closeType: "fixed" }, now);
+    if (deadline.kind === "ended" || !Number.isFinite(deadline.days))
+      return false;
+  }
+  return !job.statusConflict;
+}
 export function deadlineNotifications(state, now = new Date()) {
   return state.apps.flatMap((app) => {
     const job = state.jobs.find((j) => j.id === app.jobId);

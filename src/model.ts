@@ -3,6 +3,7 @@ export type Question = (typeof seed.apps)[number]["questions"][number] & {
   softDeleted?: boolean;
 };
 export type Job = (typeof seed.jobs)[number] & {
+  collectionState?: "diagnostic";
   manualURL?: string;
   lastCheckedAt?: string | null;
 };

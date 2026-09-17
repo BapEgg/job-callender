@@ -6,6 +6,9 @@ export function slackText(payload) {
     );
   if (payload.type === "summary")
     return (
+      (payload.test
+        ? "[연결 시험] 준비실의 Slack 연결 확인입니다. 실제 공고 검색 결과가 아닙니다.\n"
+        : "") +
       `공고 갱신: 신규 ${payload.added}건 / 변경 ${payload.changed}건\n` +
       payload.jobs
         .map((j) => `${clean(j.company)} · ${clean(j.title)}\n${clean(j.url)}`)
@@ -34,7 +37,7 @@ export async function deliver(webhook, payload) {
       }),
       signal: AbortSignal.timeout(15000),
     });
-    return r.ok ? "sent" : "failed";
+    return r.ok && (await r.text()).trim() === "ok" ? "sent" : "failed";
   } catch {
     return "uncertain";
   }

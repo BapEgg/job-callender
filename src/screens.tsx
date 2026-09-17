@@ -208,33 +208,62 @@ export function createScreens(
           autoComplete={type === "password" ? "current-password" : "off"}
         />
         {options ? (
-          <>
-            <span className="field-help">
-              여러 개를 선택할 수 있어요. 목록에 없으면 위에 쉼표로 구분해 직접
-              입력하세요.
-            </span>
-            <div
-              className="row wrap"
-              role="group"
-              aria-label={`${label} 선택 목록`}
-              style={{ gap: 6 }}
-            >
-              {options.map((option) => {
-                const active = selected.includes(option.toLowerCase());
-                return (
-                  <button
-                    key={option}
-                    type="button"
-                    className={`btn small ${active ? "primary" : ""}`}
-                    aria-pressed={active}
-                    onClick={() => act("toggle-profile-option", name, option)}
-                  >
-                    {option}
-                  </button>
-                );
-              })}
+          <details className="profile-picker">
+            <summary>
+              <span>목록에서 선택</span>
+              <span className="profile-picker-count">
+                {selected.length ? `${selected.length}개 입력됨` : "선택 안 함"}
+              </span>
+            </summary>
+            <div className="profile-picker-body">
+              <p className="field-help">
+                여러 개를 고를 수 있어요. 위 입력칸에 직접 적은 내용도 함께
+                저장됩니다.
+              </p>
+              <div role="group" aria-label={`${label} 선택 목록`}>
+                {(name.endsWith("-exclusions") ? ["제외", "확인"] : [""]).map(
+                  (group) => (
+                    <div className="profile-picker-group" key={group}>
+                      {group && (
+                        <h4>
+                          {group === "제외"
+                            ? "피하고 싶은 조건"
+                            : "지원 전에 확인할 조건"}
+                        </h4>
+                      )}
+                      <div className="profile-picker-options">
+                        {options
+                          .filter(
+                            (option) =>
+                              !group || option.startsWith(group + ":"),
+                          )
+                          .map((option) => {
+                            const active = selected.includes(
+                              option.toLowerCase(),
+                            );
+                            return (
+                              <button
+                                key={option}
+                                type="button"
+                                className={`btn small ${active ? "primary" : ""}`}
+                                aria-pressed={active}
+                                onClick={() =>
+                                  act("toggle-profile-option", name, option)
+                                }
+                              >
+                                {group
+                                  ? option.replace(/^[^:]+:\s*/, "")
+                                  : option}
+                              </button>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  ),
+                )}
+              </div>
             </div>
-          </>
+          </details>
         ) : help ? (
           <span className="field-help">{help}</span>
         ) : null}
@@ -3614,27 +3643,36 @@ export function createScreens(
                   <div className={"setting-row"}>
                     <span className={"connection-mark"}>{"PC"}</span>
                     <div className={"grow"}>
-                      <h3>{"개인 실행기"}</h3>
+                      <h3>{"개인 실행기 · 이 PC의 AI 연결 도우미"}</h3>
                       <p>
                         {fixture
                           ? "이 스위치는 연결 끊김과 작업 대기를 시연합니다. 실제 PC 상태를 읽지 않습니다."
                           : UI.connections?.lastSeen
-                            ? "마지막 응답: " +
+                            ? "이 PC의 AI 도구에 요청을 전달합니다. 마지막 응답: " +
                               new Date(UI.connections.lastSeen).toLocaleString(
                                 "ko-KR",
                               )
-                            : "최근 90초 내 호스트 실행기 응답이 없거나 상태 확인에 실패했습니다."}
+                            : "이 PC에서 로그인한 AI 도구에 요청을 전달하는 프로그램입니다. 최근 응답이 없어 연결 상태를 확인해 주세요."}
                       </p>
                     </div>
-                    {keyed(
-                      switchHTML(
-                        "runner",
-                        fixture ? S.settings.runner : !!UI.connections?.runner,
-                        fixture
-                          ? "개인 실행기 연결 상태 시연"
-                          : "개인 실행기 연결 상태",
-                      ),
-                    )}
+                    {fixture
+                      ? keyed(
+                          switchHTML(
+                            "runner",
+                            fixture
+                              ? S.settings.runner
+                              : !!UI.connections?.runner,
+                            fixture
+                              ? "개인 실행기 연결 상태 시연"
+                              : "개인 실행기 연결 상태",
+                          ),
+                        )
+                      : keyed(
+                          tag(
+                            UI.connections?.runner ? "연결됨" : "응답 없음",
+                            UI.connections?.runner ? "green" : "amber",
+                          ),
+                        )}
                   </div>
                   <div className={"setting-row"}>
                     <span className={"connection-mark"}>{"GPT"}</span>
@@ -3697,7 +3735,9 @@ export function createScreens(
                   <div className={"mt-16"}>
                     {keyed(
                       notice(
-                        "API 키, 비밀번호, 로그인 토큰은 이 시안에 입력하지 마세요. 추가 결제나 실제 인증을 진행하지 않습니다.",
+                        fixture
+                          ? "API 키, 비밀번호, 로그인 토큰은 이 시안에 입력하지 마세요. 추가 결제나 실제 인증을 진행하지 않습니다."
+                          : "개인 실행기는 이 PC에 로그인된 AI 구독을 사용합니다. PC가 꺼지면 멈추며, 별도 유료 API로 자동 전환하지 않습니다.",
                         "",
                         "lock",
                       ),
@@ -3710,7 +3750,17 @@ export function createScreens(
                   <h2>{"Slack 알림"}</h2>
                   {keyed(
                     tag(
-                      fixture ? "#job-alerts" : "Slack 미검증",
+                      fixture
+                        ? "#job-alerts"
+                        : (
+                            {
+                              sent: "최근 전송 성공",
+                              failed: "전송 실패",
+                              uncertain: "수신 확인 필요",
+                              ready: "전송 대기",
+                              unconfigured: "Webhook 설정 필요",
+                            } as Record<string, string>
+                          )[UI.connections?.slack] || "상태 확인 필요",
                       fixture ? "green" : "amber",
                     ),
                   )}
@@ -3721,20 +3771,38 @@ export function createScreens(
                     <div className={"grow"}>
                       <h3>{"개인 워크스페이스 / job-alerts"}</h3>
                       <p>
-                        {"사용자가 생성한 채널을 가정한 화면입니다."}
+                        {fixture
+                          ? "사용자가 생성한 채널을 가정한 화면입니다."
+                          : "공고 갱신 요약과 미제출 공고의 D-1·당일 알림만 보냅니다."}
                         <br />
-                        {"Webhook URL은 입력하거나 보관하지 않습니다."}
+                        {fixture
+                          ? "Webhook URL은 입력하거나 보관하지 않습니다."
+                          : UI.connections?.slackLastAttempt
+                            ? "최근 전송 시도: " +
+                              new Date(
+                                UI.connections.slackLastAttempt,
+                              ).toLocaleString("ko-KR")
+                            : "전송 기록이 없습니다. 비밀 Webhook 주소는 PC의 비공개 설정에서 관리합니다."}
                       </p>
                     </div>
-                    {keyed(
-                      switchHTML(
-                        "slack",
-                        S.settings.slack,
-                        fixture
-                          ? "Slack 알림 사용 시연"
-                          : "Slack 알림 연결 상태",
-                      ),
-                    )}
+                    {fixture
+                      ? keyed(
+                          switchHTML(
+                            "slack",
+                            S.settings.slack,
+                            fixture
+                              ? "Slack 알림 사용 시연"
+                              : "Slack 알림 연결 상태",
+                          ),
+                        )
+                      : keyed(
+                          tag(
+                            UI.connections?.slack === "sent"
+                              ? "전송 확인"
+                              : "서버 상태 기준",
+                            "outline",
+                          ),
+                        )}
                   </div>
                   <div className={"row wrap mt-16"}>
                     {keyed(
@@ -3743,7 +3811,11 @@ export function createScreens(
                         icon: "eye",
                       }),
                     )}
-                    <span className={"fine"}>{"실제 발송 없음"}</span>
+                    <span className={"fine"}>
+                      {fixture
+                        ? "실제 발송 없음"
+                        : "미리보기 버튼은 알림을 보내지 않습니다."}
+                    </span>
                   </div>
                 </div>
               </section>
@@ -3751,7 +3823,11 @@ export function createScreens(
             <aside>
               <section className={"panel"}>
                 <div className={"panel-body"}>
-                  <h3>{"지금 연결된 것은 없습니다"}</h3>
+                  <h3>
+                    {fixture
+                      ? "지금 연결된 것은 없습니다"
+                      : "내 PC에서 준비를 이어갑니다"}
+                  </h3>
                   <p className={"fine mt-12"} style={{ lineHeight: "1.95" }}>
                     {fixture
                       ? "버튼과 상태 변경은 UI 검토용입니다. 설치한 CLI, PostgreSQL, Docker, Slack과의 연결은 프로토타입 승인 후 별도로 구현합니다."
@@ -3762,7 +3838,7 @@ export function createScreens(
                     <span>{"AI 작업 대기"}</span>
                     <span>
                       {keyed(UI.queued.length)}
-                      {"건 · 시연"}
+                      {fixture ? "건 · 시연" : "건"}
                     </span>
                   </div>
                   <div className={"key-value"}>
@@ -3775,29 +3851,31 @@ export function createScreens(
                   </div>
                 </div>
               </section>
-              <section className={"panel mt-16"}>
-                <div className={"panel-body"}>
-                  <h3>{"시안 검토 도구"}</h3>
-                  {keyed(
-                    btn("전체 화면 목록", "screen-map", {
-                      cls: "w-full small mt-16",
-                      icon: "grid",
-                    }),
-                  )}
-                  {keyed(
-                    btn("색상 · 배치 기준", "design-guide", {
-                      cls: "w-full small mt-12",
-                      icon: "palette",
-                    }),
-                  )}
-                  {keyed(
-                    btn("검토 의견 모아 보기", "feedback", {
-                      cls: "w-full small mt-12",
-                      icon: "message",
-                    }),
-                  )}
-                </div>
-              </section>
+              {fixture && (
+                <section className={"panel mt-16"}>
+                  <div className={"panel-body"}>
+                    <h3>{"시안 검토 도구"}</h3>
+                    {keyed(
+                      btn("전체 화면 목록", "screen-map", {
+                        cls: "w-full small mt-16",
+                        icon: "grid",
+                      }),
+                    )}
+                    {keyed(
+                      btn("색상 · 배치 기준", "design-guide", {
+                        cls: "w-full small mt-12",
+                        icon: "palette",
+                      }),
+                    )}
+                    {keyed(
+                      btn("검토 의견 모아 보기", "feedback", {
+                        cls: "w-full small mt-12",
+                        icon: "message",
+                      }),
+                    )}
+                  </div>
+                </section>
+              )}
             </aside>
           </div>
         </Fragment>
@@ -4037,6 +4115,94 @@ export function createScreens(
           </div>
         </Fragment>
       );
+    if (UI.settingsTab === "batch" && !fixture) {
+      const searches = (UI.tasks || []).filter(
+        (task: any) => task.type === "search",
+      );
+      const latest = searches[0];
+      const success = searches.find((task: any) => task.status === "succeeded");
+      const active = searches.some((task: any) =>
+        ["queued", "running"].includes(task.status),
+      );
+      const labels: Record<string, string> = {
+        queued: "대기 중",
+        running: "확인 중",
+        succeeded: "완료",
+        failed: "실패",
+        cancelled: "취소됨",
+      };
+      body = (
+        <div className="cols-main">
+          <section className="panel">
+            <div className="panel-head">
+              <h2>공고를 자동으로 확인하는 시간</h2>
+              {tag("한국시간", "outline")}
+            </div>
+            <div className="panel-body" style={{ paddingTop: 0 }}>
+              <div className="key-value">
+                <span>정기 확인</span>
+                <span>매일 00:00 · PC와 실행기가 켜져 있을 때</span>
+              </div>
+              <div className="key-value">
+                <span>최근 요청</span>
+                <span>
+                  {latest
+                    ? labels[latest.status] || latest.status
+                    : "요청 기록 없음"}
+                </span>
+              </div>
+              <div className="key-value">
+                <span>마지막 성공</span>
+                <span>
+                  {success?.finished_at
+                    ? new Date(success.finished_at).toLocaleString("ko-KR")
+                    : "확인된 성공 기록 없음"}
+                </span>
+              </div>
+              <div className="key-value">
+                <span>공개 검색 연결</span>
+                <span>
+                  {UI.connections?.capabilities?.search
+                    ? "사용 가능"
+                    : "검색 결과 검증 필요"}
+                </span>
+              </div>
+              {latest?.error_code && (
+                <p className="notice amber mt-16">
+                  최근 요청 오류: {latest.error_code}
+                </p>
+              )}
+              <div className="row wrap mt-16">
+                {btn(
+                  active ? "공고 확인 진행 중" : "지금 공고 확인",
+                  "run-batch",
+                  { cls: "primary", icon: "refresh", disabled: active },
+                )}
+                {btn("연결 상태 다시 확인", "refresh-connections", {
+                  cls: "small",
+                  icon: "monitor",
+                })}
+                {btn("작업 기록 보기", "tasks", { cls: "small" })}
+              </div>
+            </div>
+          </section>
+          <aside>
+            {notice(
+              "PC나 실행기가 꺼져 있으면 공고를 확인할 수 없어요. 다시 켜지고 연결되면 오늘 성공 기록을 확인해 필요한 경우 한 번 실행합니다.",
+              "",
+              "info",
+            )}
+            <div className="mt-16">
+              {notice(
+                "지금 공고 확인은 실제 검색 요청입니다. 검색 연결이나 결과 검증이 실패하면 실패 상태를 표시하며 공고를 임의로 만들지 않습니다.",
+                "",
+                "search",
+              )}
+            </div>
+          </aside>
+        </div>
+      );
+    }
     if (UI.settingsTab === "data")
       body = (
         <Fragment key={jsxKey++}>
@@ -4107,7 +4273,9 @@ export function createScreens(
         {keyed(
           pageHead(
             "설정",
-            "연결, 알림, 배치 동작을 확인하고 시안의 예외 상태를 점검하세요.",
+            fixture
+              ? "연결, 알림, 배치 동작을 확인하고 시안의 예외 상태를 점검하세요."
+              : "이 PC의 AI 연결과 공고 갱신, 알림 설정을 확인하세요.",
           ),
         )}
         <div className={"tabs"} role={"tablist"} aria-label={"설정 분류"}>
@@ -4115,7 +4283,7 @@ export function createScreens(
             [
               ["connection", "연결"],
               ["notification", "알림 정책"],
-              ["batch", "배치 · 상태 시연"],
+              ["batch", fixture ? "배치 · 상태 시연" : "공고 자동 갱신"],
               ["data", "데이터 · 계정"],
             ].map(([v, l]) => (
               <Fragment key={jsxKey++}>
@@ -4386,10 +4554,9 @@ export function createScreens(
                 S.profile.career,
               ),
             )}
+            {keyed(field("지원 직무", "on-role", S.profile.role))}
             {keyed(field("희망 지역", "on-region", S.profile.region))}
-            <div className={"span2"}>
-              {keyed(field("주요 기술", "on-skills", S.profile.skills))}
-            </div>
+            {keyed(field("주요 기술", "on-skills", S.profile.skills))}
             <div className={"span2"}>
               {keyed(
                 field(

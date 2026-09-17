@@ -631,8 +631,9 @@ export function FixtureProvider({ children }: { children: ReactNode }) {
   const act: Action = (action, id = "", value = "", element) => {
     if (element) trigger.current = element;
     if (action === "toggle-profile-option") {
-      const key = id.split("-").at(-1) as "skills" | "region" | "exclusions";
-      if (!["skills", "region", "exclusions"].includes(key)) return;
+      const key = id.split("-").at(-1) as
+        "role" | "skills" | "region" | "exclusions";
+      if (!["role", "skills", "region", "exclusions"].includes(key)) return;
       setForm((previous) => {
         const entries = String(
           previous[id] ?? stateRef.current.profile[key] ?? "",
@@ -651,6 +652,20 @@ export function FixtureProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    if (action === "refresh-connections") {
+      if (fixture) return;
+      void api("/api/connections")
+        .then((result) => {
+          setConnections(result);
+          setMessage("서버에서 현재 연결 상태를 다시 확인했습니다.");
+        })
+        .catch(() => {
+          setConnections(null);
+          setMessage("연결 상태를 가져오지 못했습니다.");
+        });
+      void refreshTasks();
+      return;
+    }
     if (action === "slack-preview") {
       setModal({ kind: "slack-preview", title: "Slack 메시지 미리보기" });
       return;
@@ -1355,6 +1370,7 @@ export function FixtureProvider({ children }: { children: ReactNode }) {
     if (action === "onboard-next") {
       if (state.onboardStep === 1)
         update((s) => {
+          s.profile.role = inputValue("on-role", s.profile.role);
           s.profile.career = inputValue("on-career", s.profile.career);
           s.profile.region = inputValue("on-region", s.profile.region);
           s.profile.skills = inputValue("on-skills", s.profile.skills);
@@ -1861,6 +1877,7 @@ export function FixtureProvider({ children }: { children: ReactNode }) {
   };
   const displayState: AppState = {
     ...state,
+    jobs: state.jobs.filter((job) => job.collectionState !== "diagnostic"),
     sources: state.sources.filter((x) => !x.softDeleted),
     experiences: state.experiences.filter((x) => !x.softDeleted),
     notes: state.notes.filter((x) => !x.softDeleted),
@@ -1893,6 +1910,10 @@ export function FixtureProvider({ children }: { children: ReactNode }) {
     ui: {
       ...ui,
       connections,
+      tasks,
+      batchRunning: tasks.some(
+        (t) => t.type === "search" && ["queued", "running"].includes(t.status),
+      ),
       route,
       queued: tasks.filter((t) => ["queued", "running"].includes(t.status)),
       generating: tasks.some(
