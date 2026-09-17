@@ -117,6 +117,7 @@ async function runnerAPI(req, res, url) {
               region: row.data.profile.region,
               exclusions: row.data.profile.exclusions,
               role: row.data.profile.role,
+              employment: row.data.profile.employment,
             },
           };
           // One current-day key; never replay missed calendar dates or reset failed attempts.
@@ -200,6 +201,10 @@ async function runnerAPI(req, res, url) {
   }
   if (req.method === "POST" && url.pathname === "/api/runner/claim") {
     const task = await transaction(async (c) => {
+      await c.query(
+        "UPDATE tasks SET status='cancelled',error_code='CANCELLED',finished_at=now() WHERE type='search' AND status='queued' AND input->>'referenceDate' IS DISTINCT FROM $1",
+        [kstDate()],
+      );
       await c.query(
         "UPDATE tasks SET status='failed',error_code='LEASE_EXPIRED',finished_at=now() WHERE status='running' AND lease_until<now()",
       );
@@ -602,6 +607,7 @@ async function api(req, res, url) {
             region: s.data.profile.region,
             exclusions: s.data.profile.exclusions,
             role: s.data.profile.role,
+            employment: s.data.profile.employment,
           },
         };
       else {

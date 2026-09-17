@@ -45,6 +45,7 @@ const state = blankState("scheduler-qa"),
   tomorrow = kstDate(new Date(Date.now() + 86400000)),
   yesterday = kstDate(new Date(Date.now() - 86400000));
 state.settings.lastSuccessDate = "2026-01-01";
+state.profile.employment = "정규직";
 state.jobs = [
   {
     id: "j",
@@ -119,6 +120,12 @@ await check("concurrent tick current-date-only single search key", async () => {
     ),
   );
   assert.deepEqual(rows, [{ key: "search:" + today, date: today }]);
+  assert.equal(
+    sql(
+      `SELECT input->'conditions'->>'employment' FROM tasks WHERE user_id='${id}' AND dedupe_key='search:${today}'`,
+    ),
+    "정규직",
+  );
   assert.equal(ownNotifications().length, 1);
 });
 await check("deadline claim refreshes edited source URL", async () => {
@@ -180,6 +187,27 @@ await check("past deadline and missed D-1 never replay", async () => {
   await req("/api/runner/tick");
   assert(ownNotifications().every((n) => n.status === "cancelled"));
 });
+await check(
+  "reconnect cancels yesterday queued search rather than replaying it",
+  async () => {
+    const staleId = randomUUID();
+    sql(
+      `INSERT INTO tasks(id,user_id,type,dedupe_key,input,created_at) VALUES('${staleId}','${id}','search','search:${yesterday}',jsonb_build_object('referenceDate','${yesterday}'),now()-interval '1 day');`,
+    );
+    await req("/api/runner/heartbeat", { capabilities: {} });
+    assert.equal((await req("/api/runner/claim")).data.task, null);
+    assert.equal(
+      sql(`SELECT status FROM tasks WHERE id='${staleId}'`),
+      "cancelled",
+    );
+    assert.equal(
+      sql(
+        `SELECT count(*) FROM tasks WHERE user_id='${id}' AND dedupe_key='search:${today}'`,
+      ),
+      "1",
+    );
+  },
+);
 await req("/api/runner/heartbeat", { capabilities: {} });
 await req("/api/auth/logout", {}, true);
 await fs.writeFile(

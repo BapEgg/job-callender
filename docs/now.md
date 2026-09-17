@@ -116,3 +116,11 @@
 - 단위21 PASS, 기존 API9그룹 PASS, 추출 API5그룹 PASS(실제 PDF/TXT/빈PDF/손상/DOCX). 모든 추출 API 케이스에서 비로그인401/타소유자404/잘못된Origin403/다운로드byte불변 검증. 독립 QA가 단위2 및 API5그룹 재실행 PASS.
 - 실제3001 UI5그룹 PASS: 합성TXT 업로드→원본download→입력보존→추출문 명시저장/reload→경험sourceId/미확인→역할/명시확인 저장. 1440/390 넘침 없음, pageerror0. scripts/test-extraction-ui.mjs, artifacts/qa-ui/extraction-result.json 및 extraction-1440.png/extraction-390.png. 390 캡처 직접 확인.
 - Docker build/TypeScript PASS, 실서비스 web 업데이트. DB/첨부 볼륨 보존. 실계정 sources0/files0/experiences0이어서 실제 사용자 경험 기반 AI 작성/제출/질문의 전체 인수는 미검증. 합성 시험을 실제 경험 성공으로 표시하지 않음. 실제 암호화PDF·한국어PDF 글꼴별 품질은 아직 미검증(한국어 UTF-8 TXT는 검증).
+
+## 실행기 재연결 및 운영 신뢰성 검증 (2026-09-17)
+- 독립 검토에서 과거 queued 검색이 오늘 재연결 시 먼저 실행되는 문제 발견. claim에서 오늘 KST referenceDate와 다른 대기 검색을 cancelled로 보존하고 실행하지 않도록 수정. 오늘 검색키는 재생성하지 않음.
+- 예약/수동 검색 입력의 employment 누락을 보강. AGY 프로세스 exit0이더라도 terminal ERROR의 quota/RESOURCE_EXHAUSTED 오류를 LIMIT_REACHED로 구분하도록 수정. 자동 무한 재시도/유료API 대체 없음.
+- 단위22 PASS 및 독립 재실행22 PASS. 격리 스케줄러5그룹 PASS(동시tick 오늘1회/원문URL변경/제출후알림취소/지난마감미재생/과거queued검색취소+고용조건전달), 작업revision5그룹 PASS(확인경험만입력/lease token/만료/초안보존/취소).
+- tests/runner-reconnect.integration.mjs: 실제 host runner 프로세스를 격리 loopback HTTP503 서버에 연결해 30초 후 heartbeat→tick→claim 복구 PASS. AI/Slack 비활성화, 실제 PC절전 시험과 구분. 증거 artifacts/qa/runner-reconnect.json.
+- 실서비스 Docker web 및 host runner 재시작(session27582). 실행중작업0 확인 후 재시작했고 실제 검색수1/알림수4 불변, 연결true/전체capabilitytrue 확인. artifacts/automation/runner-restart-before.json, runner-restart-after.json. 실제 사용자 자료나 알림 이력 삭제 없음.
+- 미검증: PC 절전·로그인 재시작, 강제종료 시 CLI 하위프로세스까지 종료, 장시간 검색 중 마감알림 지연, 실제 D-1/당일 알림의 장기운영, 실제 구독한도 소진/복구. 이번 알림시험은 격리 조건·큐 검증이며 실제 Slack 추가전송 없음. OS 자동 시작은 여전히 미등록(별도 승인 필요).

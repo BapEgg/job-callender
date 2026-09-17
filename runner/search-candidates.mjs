@@ -32,6 +32,13 @@ export function parseCandidates(stdout) {
       .map((line) => JSON.parse(line));
     const terminal = events.findLast((e) => e.event === "result");
     const result = terminal?.result;
+    if (
+      result?.status !== "SUCCESS" &&
+      /quota|rate.?limit|resource.?exhausted|usage.?limit/i.test(
+        JSON.stringify(result?.error || ""),
+      )
+    )
+      return { errorCode: "LIMIT_REACHED" };
     if (result?.status !== "SUCCESS" || result.denied_actions?.length)
       return { errorCode: "SEARCH_FAILED" };
     if (

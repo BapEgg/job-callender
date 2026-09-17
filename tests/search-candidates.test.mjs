@@ -69,6 +69,15 @@ test("tool failure cannot be hidden by a successful terminal response", () => {
     "SEARCH_FAILED",
   );
 });
+test("CLI exit-zero terminal quota error is still a usage limit", () => {
+  const result = parseCandidates(
+    JSON.stringify({
+      event: "result",
+      result: { status: "ERROR", error: "RESOURCE_EXHAUSTED: quota exceeded" },
+    }),
+  );
+  assert.equal(result.errorCode, "LIMIT_REACHED");
+});
 test("redirect resolution makes no request without approval and never follows an arbitrary target", async () => {
   let calls = 0;
   const fetcher = async () => {
