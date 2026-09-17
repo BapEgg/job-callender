@@ -44,3 +44,5 @@ SELECT type, status, error_code, created_at, finished_at FROM tasks ORDER BY cre
 앱의 변경 감지/제출본 보호를 유지하려면 편집은 웹 화면에서 합니다. 백업은 `node scripts/backup.mjs`이며 DB와 첨부파일을 함께 보관합니다.
 
 DBeaver 공식 안내: https://dbeaver.com/docs/dbeaver/Database-driver-PostgreSQL/
+
+DB 스키마·테이블·컬럼에 한국어 설명이 들어 있습니다. DBeaver에서 연결을 새로고침(F5)하고 테이블의 속성 → 컬럼 → 설명을 확인하세요. `data`처럼 여러 자료를 묶은 컬럼에는 내부 항목의 뜻도 설명했습니다.

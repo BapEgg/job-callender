@@ -9,12 +9,11 @@ pool.on("error", (error) =>
   console.error("database connection interrupted", error.code || error.name),
 );
 export async function migrate() {
-  await pool.query(
-    await fs.readFile(
-      new URL("../db/001-initial.sql", import.meta.url),
-      "utf8",
-    ),
-  );
+  for (const filename of ["001-initial.sql", "002-korean-comments.sql"]) {
+    await pool.query(
+      await fs.readFile(new URL(`../db/${filename}`, import.meta.url), "utf8"),
+    );
+  }
 }
 export async function transaction(fn) {
   const client = await pool.connect();
