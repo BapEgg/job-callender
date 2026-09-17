@@ -124,3 +124,10 @@
 - tests/runner-reconnect.integration.mjs: 실제 host runner 프로세스를 격리 loopback HTTP503 서버에 연결해 30초 후 heartbeat→tick→claim 복구 PASS. AI/Slack 비활성화, 실제 PC절전 시험과 구분. 증거 artifacts/qa/runner-reconnect.json.
 - 실서비스 Docker web 및 host runner 재시작(session27582). 실행중작업0 확인 후 재시작했고 실제 검색수1/알림수4 불변, 연결true/전체capabilitytrue 확인. artifacts/automation/runner-restart-before.json, runner-restart-after.json. 실제 사용자 자료나 알림 이력 삭제 없음.
 - 미검증: PC 절전·로그인 재시작, 강제종료 시 CLI 하위프로세스까지 종료, 장시간 검색 중 마감알림 지연, 실제 D-1/당일 알림의 장기운영, 실제 구독한도 소진/복구. 이번 알림시험은 격리 조건·큐 검증이며 실제 Slack 추가전송 없음. OS 자동 시작은 여전히 미등록(별도 승인 필요).
+
+## Windows 자동 시작 등록 준비 (2026-09-17)
+- scripts/register-runner-startup.ps1 준비. 기본은 읽기 전용 미리보기, -Install만 등록. JobCallender-Runner/current-user logon/Interactive Limited/비밀번호없음/숨김창/IgnoreNew/실패1분간격3회/PC깨우지않음. 기존 같은이름 예약작업 없음 확인, 있다면 덮어쓰기 금지.
+- start-runner.ps1에 Node/Codex 절대경로 인자와 프로젝트별 named mutex 추가. test-runner-startup.ps1이 새 PowerShell 프로세스에서 실제 중복 시작 차단 PASS(실행기/AI 미실행).
+- 기본 Windows PowerShell 실행 정책으로 -File 실패. 정책 변경·우회 안 함. 현재 Codex bundled PowerShell로 동일시험 PASS 및 preview 생성. 실제 등록 예정 경로 artifacts/automation/startup-preview.json, 설명 docs/runner-startup.md. 런타임/CLI 설치경로 변경 시 재검토 필요.
+- 독립 검토에서 시험이 mutex를 확보하지 못한 경우의 경합을 지적해 자식 실행 전 중단하도록 수정, 재검증 PASS. Local mutex는 같은로그인세션의wrapper경유만 보호하며 직접node실행은 별개임을 안내.
+- 아직 예약작업 등록·기존 실행기 교체·로그아웃/로그인 없음. 사용자에게 작업1개등록 및 지금수동실행기교체·연결검증 범위로 승인 질문을 제시한 상태. 준비 코드/설명은 검증 후 develop에 반영하며 실제 등록은 답변 뒤 실행한다.
