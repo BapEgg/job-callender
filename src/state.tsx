@@ -208,6 +208,15 @@ export function FixtureProvider({ children }: { children: ReactNode }) {
     queued: [],
   });
   const [stageDraft, setStageDraft] = useState<Stage[]>([]);
+  const [extraction, setExtraction] = useState<{
+    sourceId: string;
+    status: string;
+    text: string;
+    pages: number | null;
+    sha256: string;
+    message: string;
+  } | null>(null);
+  const extractionRequest = useRef(0);
   const [tasks, setTasks] = useState<Task[]>([]),
     [taskBusy, setTaskBusy] = useState(false),
     [taskError, setTaskError] = useState(""),
@@ -1150,6 +1159,89 @@ export function FixtureProvider({ children }: { children: ReactNode }) {
         setModal({ kind: "source", title: s.title, text: s.url || s.note });
       return;
     }
+    if (action === "source-extract") {
+      const source = state.sources.find((item) => item.id === id);
+      if (!source?.fileId) return;
+      const request = ++extractionRequest.current;
+      setExtraction({
+        sourceId: id,
+        status: "loading",
+        text: "",
+        pages: null,
+        sha256: "",
+        message: "로컬에서 파일 내용을 읽고 있습니다.",
+      });
+      open(
+        "source-text",
+        "원본 내용 확인 · 직접 수정",
+        [
+          {
+            name: "extractedText",
+            label: "저장할 원본 내용",
+            type: "textarea",
+            value: source.extractedText || "",
+          },
+        ],
+        id,
+        "추출 결과는 아래 입력에 자동 반영하지 않습니다. 내용을 검토해 가져오거나 직접 붙여넣은 뒤 저장하세요. 원본 파일은 보존하며 AI에 전송하지 않습니다.",
+      );
+      if (fixture) {
+        setExtraction({
+          sourceId: id,
+          status: "unsupported",
+          text: "",
+          pages: null,
+          sha256: "",
+          message:
+            "시안 모드에서는 파일을 읽지 않습니다. 직접 입력을 시험할 수 있습니다.",
+        });
+        return;
+      }
+      void api<{
+        extraction: {
+          status: string;
+          text: string;
+          pages: number | null;
+          sha256: string;
+          message: string;
+        };
+      }>(`/api/files/${encodeURIComponent(source.fileId)}/extract`, "POST", {})
+        .then((result) => {
+          if (request === extractionRequest.current)
+            setExtraction({ ...result.extraction, sourceId: id });
+        })
+        .catch((error) => {
+          if (request === extractionRequest.current)
+            setExtraction({
+              sourceId: id,
+              status: "failed",
+              text: "",
+              pages: null,
+              sha256: "",
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "파일 내용을 읽지 못했습니다. 직접 붙여넣을 수 있습니다.",
+            });
+        });
+      return;
+    }
+    if (action === "source-experience") {
+      const source = state.sources.find((item) => item.id === id);
+      if (!source?.extractedText) {
+        inform("원본 내용을 먼저 확인하고 저장해 주세요.");
+        return;
+      }
+      act("edit-experience");
+      setForm((previous) => ({
+        ...previous,
+        title: source.title,
+        body: source.extractedText,
+        confirmed: false,
+        sourceId: source.id,
+      }));
+      return;
+    }
     if (action === "add-note") {
       open(
         "note",
@@ -1461,6 +1553,29 @@ export function FixtureProvider({ children }: { children: ReactNode }) {
       return;
     }
     const txt = (key: string) => String(f[key] ?? "").trim();
+    if (modal.kind === "source-text") {
+      if (!txt("extractedText")) {
+        setMessage("저장할 내용을 입력해 주세요.");
+        return;
+      }
+      update((s) => {
+        const source = s.sources.find((item) => item.id === id);
+        if (!source) return;
+        source.extractedText = txt("extractedText");
+        source.extractionSha256 = source.sha256;
+        source.extractionStatus = "user_saved";
+        source.extractionPages =
+          extraction?.sourceId === id
+            ? extraction.pages
+            : source.extractionPages;
+        source.status = "내용 저장 · 경험 미확인";
+      });
+      close();
+      setMessage(
+        "검토한 원본 내용을 저장했습니다. 경험 등록은 자료 항목에서 직접 선택해 주세요.",
+      );
+      return;
+    }
     if (modal.kind === "question-submission") {
       if (taskBusy) return;
       const selected = txt("submissionId");
@@ -1578,6 +1693,7 @@ export function FixtureProvider({ children }: { children: ReactNode }) {
           body: txt("body"),
           skills: txt("skills"),
           confirmed: !!f.confirmed,
+          ...(f.sourceId ? { sourceId: String(f.sourceId) } : {}),
         };
         const old = s.experiences.find((e) => e.id === id);
         if (old) Object.assign(old, data);
@@ -2091,6 +2207,60 @@ export function FixtureProvider({ children }: { children: ReactNode }) {
                 </div>
               ))}
 
+              {modal.kind === "source-text" &&
+                extraction &&
+                extraction.sourceId === modal.id && (
+                  <section className="meta-box mt-16" aria-live="polite">
+                    <h3>
+                      {{
+                        loading: "내용 읽는 중",
+                        ready: "로컬 추출 결과",
+                        needs_text: "텍스트 확인 필요 · OCR은 지원하지 않음",
+                        failed: "추출 실패",
+                        unsupported: "자동 추출 미지원",
+                      }[extraction.status] || "추출 상태"}
+                    </h3>
+                    <p className="fine mt-12">
+                      {extraction.message}{" "}
+                      {extraction.pages !== null
+                        ? `· ${extraction.pages}쪽`
+                        : ""}
+                    </p>
+                    {extraction.text && (
+                      <>
+                        <pre
+                          className="compare-text mt-12"
+                          style={{
+                            whiteSpace: "pre-wrap",
+                            overflowWrap: "anywhere",
+                            maxHeight: 280,
+                            overflowY: "auto",
+                          }}
+                        >
+                          {extraction.text}
+                        </pre>
+                        <button
+                          className="btn small mt-12"
+                          onClick={() =>
+                            setForm((v) => ({
+                              ...v,
+                              extractedText:
+                                String(v.extractedText || "") +
+                                (v.extractedText ? "\n\n" : "") +
+                                extraction.text,
+                            }))
+                          }
+                        >
+                          추출 결과를 입력 끝에 추가
+                        </button>
+                      </>
+                    )}
+                    <p className="fine mt-12">
+                      추출만으로 본인의 수행 사실이 확인되지는 않습니다. 저장 후
+                      경험 추가에서 역할과 한계를 확인하세요.
+                    </p>
+                  </section>
+                )}
               {modal.kind === "profile" && (
                 <>
                   <button

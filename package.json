@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "test:visual": "node scripts/visual.mjs",
     "test:interactions": "node scripts/test-interactions.mjs",
-    "test": "node --test tests/domain.test.mjs tests/runner.test.mjs tests/search-candidates.test.mjs",
+    "test": "node --test tests/domain.test.mjs tests/runner.test.mjs tests/search-candidates.test.mjs tests/extraction.test.mjs",
     "test:visual:all": "node scripts/visual-all.mjs",
     "test:api": "node tests/api.integration.mjs",
     "test:ui": "node scripts/test-ui.mjs",

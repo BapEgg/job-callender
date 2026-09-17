@@ -49,7 +49,7 @@
 - 자료 파일은 1MB PDF/TXT/MD/DOCX 보관·다운로드 지원. 파일 내용 자동 추출 성공으로 표시하지 않는다.
 
 ## 다음 작업 하나
-PDF 등 원본 내용 추출을 구현하고, 실제 사용자 경험 기반 작성→검토→제출본→질문 흐름을 검증한다. 원티드 자동 검색→원문 검증→DB→Slack의 실제 첫 인수는 아래 2026-09-17 기록처럼 완료했다.
+사용자가 원본 자료를 등록하고 본인 수행 범위를 확인하면 실제 경험 기반 작성→검토→제출본→질문 흐름을 검증한다. 자료가 없는 동안 진행 가능한 다음 개발 항목은 운영 검증(복귀·한도/장애·마감 알림)이며 OS 자동 시작 등록은 승인 후 실행한다.
 
 ## 사용자 요청 반영 — 프로필 선택 목록 (2026-09-17)
 - 주요 기술/희망 지역/제외·확인 조건에 복수 선택 목록 추가. 최초 설정과 기본 프로필에 공통 적용. 직접 입력과 기존 문자열 저장 계약 유지, 자동 선택 없음.
@@ -108,3 +108,11 @@ PDF 등 원본 내용 추출을 구현하고, 실제 사용자 경험 기반 작
 - runner/main.mjs가 private SEARCH_VERIFIED/GOOGLE_REDIRECT_APPROVED를 읽고 scripts/start-runner.ps1이 실제 agy 경로 전달. 현재 host runner session20510, search/draft/questions/slack=true. OS 자동 시작 등록은 아님. 오늘 중복키는 유지하여 재시작 시 같은 검색을 재생성하지 않음.
 - 단위19개 PASS 및 독립 읽기 검토 PASS. 자동 원문 검증은 Wanted만 지원, 미지원 조건은 검토 필요로 실패 처리. 검색의 최근90일은 검색 힌트이며 신선도 보증이 아님; 모집 상태는 별도 실제 원문 검사. 후보 전부 부적격이면 SEARCH_FAILED로 남기며 가짜 성공0건을 기록하지 않음.
 - 남은 품질 보강: 동일 URL 제목 변경 시 기존 자동merge 중복 가능성, 기업/후기/학습자료 검색, 다양한 조건 지원. 최초 실제 자동수집 인수와 장기간 운영 검증은 구분한다.
+
+## 로컬 원본 내용 추출 및 경험 연결 (2026-09-17)
+- server/extraction.mjs와 POST /api/files/:id/extract 추가. Docker Poppler로 PDF 내용 읽기, UTF-8 TXT/MD 읽기. 외부 AI 전송 없음. 소유자·Origin 검사, 원본 SHA 대조, shell 없는 명령 인자, 15초/출력1MB/동시2개 제한. PDF50쪽/추출5만자까지, 초과 시 부분 성공으로 표시하지 않고 직접 입력 안내.
+- 스캔 이미지 OCR 및 DOCX 추출은 미지원. 암호화/손상/도구 실패는 일반화한 실패·직접입력 안내, 비공개 본문이나 도구 stderr를 로그/응답에 노출하지 않음. 원본 byte 보존. 추출 API는 미리보기만 반환하고, 사용자가 저장한 문장은 기존 user_state sources.extractedText에 저장; extractionSha256 원본 연결. 경험은 sourceId 연결, confirmed=false로 시작.
+- UI 사용: 마이데이터→등록한 원본 자료→내용 추출→추출 결과를 입력 끝에 추가 또는 직접 수정→저장→내용으로 경험 추가→본인 역할 확인. 추출 응답이 사용자 편집문을 덮어쓰지 않음. 확인된 경험만 기존 자기소개서 작업 입력에 포함되며 제출 확정은 기존 명시 확인 계약 유지.
+- 단위21 PASS, 기존 API9그룹 PASS, 추출 API5그룹 PASS(실제 PDF/TXT/빈PDF/손상/DOCX). 모든 추출 API 케이스에서 비로그인401/타소유자404/잘못된Origin403/다운로드byte불변 검증. 독립 QA가 단위2 및 API5그룹 재실행 PASS.
+- 실제3001 UI5그룹 PASS: 합성TXT 업로드→원본download→입력보존→추출문 명시저장/reload→경험sourceId/미확인→역할/명시확인 저장. 1440/390 넘침 없음, pageerror0. scripts/test-extraction-ui.mjs, artifacts/qa-ui/extraction-result.json 및 extraction-1440.png/extraction-390.png. 390 캡처 직접 확인.
+- Docker build/TypeScript PASS, 실서비스 web 업데이트. DB/첨부 볼륨 보존. 실계정 sources0/files0/experiences0이어서 실제 사용자 경험 기반 AI 작성/제출/질문의 전체 인수는 미검증. 합성 시험을 실제 경험 성공으로 표시하지 않음. 실제 암호화PDF·한국어PDF 글꼴별 품질은 아직 미검증(한국어 UTF-8 TXT는 검증).

@@ -19,6 +19,7 @@ Test Connection으로 확인 후 `jobprep → Schemas → public → Tables`를 
 | 업로드한 PDF 등 원본 바이트 | Docker `job-callender_attachments` 볼륨. 웹 컨테이너 `/data/files/<파일 UUID>` |
 | 파일 이름·크기·해시·소유자 | PostgreSQL `files` |
 | 원본 자료의 제목·설명·파일 연결 | `user_state.data`의 `sources` |
+| 사용자가 저장한 추출문·원본 해시 | `user_state.data.sources[].extractedText/extractionSha256` |
 | 메모·외부 AI 답변 | `user_state.data`의 `notes` |
 | 프로필·공고·지원별 작업본·경험 | `user_state.data`의 `profile/jobs/apps/experiences` |
 | 과거 편집 상태 | `state_history` |
@@ -27,6 +28,10 @@ Test Connection으로 확인 후 `jobprep → Schemas → public → Tables`를 
 | 알림 발송 결과 | `notification_records` |
 
 파일은 Windows 프로젝트 폴더에 직접 저장되지 않습니다. Docker Desktop의 Volumes에서 해당 볼륨을 확인하거나 앱의 원본 다운로드를 사용합니다. PDF 보관과 PDF 내용 분석은 별개입니다.
+
+등록한 원본 자료에서 **내용 추출 → 검토·수정 → 저장 → 내용으로 경험 추가** 순서로 사용합니다. 추출만 한 결과는 미리보기이며 저장을 눌러야 DB에 남습니다. 경험은 `sourceId`로 자료와 연결하고 미확인 상태로 시작합니다. 본인 수행 범위를 확인한 경험만 자기소개서 생성 입력에 포함됩니다.
+
+추출은 Docker 내부 Poppler로 처리하며 파일 내용을 외부 AI에 보내지 않습니다. PDF/TXT/MD, 원본 1MB 이하, PDF 50쪽 이하, 추출문 5만 자까지 지원합니다. 스캔 이미지 OCR·DOCX 추출은 지원하지 않으므로 내용을 직접 붙여넣습니다. 손상·암호화·초과 크기는 원본을 그대로 두고 실패/확인 필요 상태로 안내합니다. PDF 줄 순서·표는 원본과 대조해 수정해야 합니다. 도구 옵션 근거: [Poppler pdftotext 매뉴얼](https://manpages.debian.org/testing/poppler-utils/pdftotext.1.en.html).
 
 DBeaver SQL 편집기에서 다음은 읽기만 수행합니다.
 

@@ -3082,6 +3082,24 @@ export function createScreens(
                               }),
                             )}
                             {keyed(
+                              s.fileId
+                                ? btn("내용 추출", "source-extract", {
+                                    id: s.id,
+                                    cls: "small",
+                                    icon: "file",
+                                  })
+                                : null,
+                            )}
+                            {keyed(
+                              s.extractedText
+                                ? btn(
+                                    "내용으로 경험 추가",
+                                    "source-experience",
+                                    { id: s.id, cls: "small", icon: "plus" },
+                                  )
+                                : null,
+                            )}
+                            {keyed(
                               btn("삭제", "delete-source", {
                                 id: s.id,
                                 cls: "ghost small",
@@ -3100,11 +3118,15 @@ export function createScreens(
               {keyed(
                 notice(
                   <Fragment key={jsxKey++}>
-                    {"파일을 선택해도 이 시안은 "}
-                    <strong>{"파일명만 저장"}</strong>
-                    {
-                      "합니다. 내용 업로드, OCR, 저장소 분석은 수행하지 않습니다."
-                    }
+                    {fixture ? (
+                      <>
+                        파일을 선택해도 이 시안은 <strong>파일명만 저장</strong>
+                        합니다. 내용 업로드, OCR, 저장소 분석은 수행하지
+                        않습니다.
+                      </>
+                    ) : (
+                      "PDF·TXT·MD 원본은 로컬에서 내용을 추출하고 직접 수정해 저장할 수 있습니다. 스캔 파일의 OCR과 저장소 분석은 지원하지 않습니다. 경험으로 등록하기 전 본인 역할을 확인하세요."
+                    )}
                   </Fragment>,
                   "blue",
                   "info",

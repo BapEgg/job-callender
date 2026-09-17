@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { pool, transaction, migrate } from "./db.mjs";
+import { extractFile } from "./extraction.mjs";
 import {
   blankState,
   demand,
@@ -720,6 +721,19 @@ async function api(req, res, url) {
       return saveState(c, user.id, old, state);
     });
     return send(res, 200, result);
+  }
+  const extraction = url.pathname.match(
+    /^\/api\/files\/([a-f0-9-]+)\/extract$/,
+  );
+  if (req.method === "POST" && extraction) {
+    const { rows } = await pool.query(
+      "SELECT * FROM files WHERE id=$1 AND user_id=$2",
+      [extraction[1], user.id],
+    );
+    demand(rows[0], "파일이 없습니다.", 404);
+    return send(res, 200, {
+      extraction: await extractFile(rows[0], path.join(filesDir, rows[0].id)),
+    });
   }
   const file = url.pathname.match(/^\/api\/files\/([a-f0-9-]+)$/);
   if (req.method === "GET" && file) {

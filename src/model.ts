@@ -53,6 +53,10 @@ export type Source = (typeof seed.sources)[number] & {
   sha256?: string;
   size?: number;
   deletedAt?: string;
+  extractedText?: string;
+  extractionSha256?: string;
+  extractionStatus?: string;
+  extractionPages?: number | null;
 };
 export type AppState = Omit<
   typeof seed,
@@ -67,6 +71,7 @@ export type AppState = Omit<
 > & {
   experiences: ((typeof seed.experiences)[number] & {
     softDeleted?: boolean;
+    sourceId?: string;
   })[];
   events: ((typeof seed.events)[number] & { softDeleted?: boolean })[];
   sources: Source[];
