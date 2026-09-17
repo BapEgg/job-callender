@@ -1,4 +1,5 @@
 import { verifiedOpenPosting } from "../server/domain.mjs";
+import { verifyWantedSource } from "./posting-source.mjs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -134,7 +135,25 @@ export async function searchJobs(task, executable, signal) {
     { cwd, timeoutMs: 310000, env: loginEnvironment(), signal },
   );
   if (result.errorCode) return result;
-  return parseSearchOutput(result.stdout);
+  const parsed = parseSearchOutput(result.stdout);
+  if (parsed.errorCode) return parsed;
+  const jobs = [],
+    rejected = [];
+  for (const candidate of parsed.result.jobs.slice(0, 3)) {
+    try {
+      const job = await verifyWantedSource(
+        candidate.url,
+        task.input.conditions,
+        signal,
+      );
+      if (!jobs.some((existing) => existing.url === job.url)) jobs.push(job);
+    } catch (error) {
+      rejected.push({ reason: error.message });
+    }
+  }
+  return jobs.length
+    ? { result: { jobs, rejected } }
+    : { errorCode: "SEARCH_FAILED" };
 }
 export function parseSearchOutput(stdout) {
   try {
@@ -143,8 +162,9 @@ export function parseSearchOutput(stdout) {
       .split(/\r?\n/)
       .filter(Boolean)
       .map((line) => JSON.parse(line));
-    const envelope =
+    const terminal =
       events.findLast((event) => event.event === "result") || events.at(-1);
+    const envelope = terminal?.result || terminal;
     if (envelope?.status !== "SUCCESS" || envelope.denied_actions?.length)
       return { errorCode: "SEARCH_FAILED" };
     const response = String(envelope.response || "")

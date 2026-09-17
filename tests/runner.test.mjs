@@ -101,6 +101,112 @@ test("Slack allows only two product categories, escapes mentions", () => {
   );
 });
 import { parseSearchOutput } from "../runner/adapters.mjs";
+import {
+  parseWantedSource,
+  wantedUrl,
+  verifyWantedSource,
+} from "../runner/posting-source.mjs";
+test("original posting rejects closed, hidden, expired, conflicting and mismatched sources", () => {
+  const now = new Date("2026-09-17T03:00:00Z");
+  const url = "https://www.wanted.co.kr/wd/123";
+  const d = {
+    id: 123,
+    status: "active",
+    hidden: false,
+    close_time: null,
+    company: { company_name: "fixture" },
+    position: "백엔드 신입",
+    address: { location: "서울" },
+    career: { is_newbie: true, annual_from: 0 },
+    requirements: "Java / Spring Boot",
+  };
+  const html = (patch = {}, ld = {}) =>
+    `<script id="__NEXT_DATA__">${JSON.stringify({ props: { pageProps: { initialData: { ...d, ...patch } } } })}</script><script type="application/ld+json">${JSON.stringify({ "@type": "JobPosting", ...ld })}</script>`;
+  const conditions = { career: "신입", region: "서울, 경기" };
+  const parse = (patch, ld, cond = conditions) =>
+    parseWantedSource(html(patch, ld), url, cond, now);
+  assert.deepEqual(parse().skills, ["Java", "Spring Boot"]);
+  assert.equal(parse().closeType, "unknown");
+  assert.throws(() => parse({ status: "close" }), /NOT_OPEN/);
+  assert.throws(() => parse({ hidden: true }), /NOT_OPEN/);
+  assert.throws(() => parse({ close_time: "2024-04-15" }), /NOT_OPEN/);
+  assert.throws(
+    () => parse({}, { validThrough: "2024-04-15" }),
+    /DEADLINE_PASSED/,
+  );
+  assert.throws(
+    () => parse({ due_time: "2026-10-01" }, { validThrough: "2026-10-02" }),
+    /CONFLICT/,
+  );
+  assert.throws(() => parse({ due_time: "2026-10-01Tbad" }), /DATE_INVALID/);
+  assert.throws(() => parse({ due_time: "2026-02-30" }), /DATE_INVALID/);
+  assert.equal(parse({ due_time: "2026-10-01T00:00:00Z" }).time, "09:00");
+  assert.throws(
+    () =>
+      parse(
+        { due_time: "2026-10-01T18:00:00" },
+        { validThrough: "2026-10-01T10:00:00" },
+      ),
+    /CONFLICT/,
+  );
+  assert.throws(
+    () => parse({}, { validThrough: "2026-09-17T10:00:00+14:00" }),
+    /DEADLINE_PASSED/,
+  );
+  assert.throws(
+    () =>
+      parse(
+        { employment_type: "intern" },
+        {},
+        { ...conditions, employment: "정규직" },
+      ),
+    /EMPLOYMENT/,
+  );
+  assert.throws(
+    () => parse({ career: { is_newbie: false, annual_from: 3 } }),
+    /CAREER/,
+  );
+  assert.throws(() => parse({ address: { location: "부산" } }), /REGION/);
+  assert.throws(() => parse({ id: 124 }), /UNREADABLE/);
+  assert.throws(
+    () => parse({}, {}, { ...conditions, exclusions: "제외: 계약직" }),
+    /REVIEW_REQUIRED/,
+  );
+  assert.throws(
+    () => parseWantedSource("<html></html>", url, {}, now),
+    /UNREADABLE/,
+  );
+});
+test("source fetching restricts destination, redirects and response size", async () => {
+  for (const url of [
+    "http://www.wanted.co.kr/wd/1",
+    "https://evil.example/wd/1",
+    "https://www.wanted.co.kr@evil.example/wd/1",
+    "https://www.wanted.co.kr/wd/1?next=private",
+  ])
+    assert.throws(() => wantedUrl(url));
+  let calls = 0;
+  await assert.rejects(
+    verifyWantedSource("https://evil.example/wd/1", {}, undefined, async () => {
+      calls++;
+    }),
+  );
+  assert.equal(calls, 0);
+  await assert.rejects(
+    verifyWantedSource(
+      "https://www.wanted.co.kr/wd/1",
+      {},
+      undefined,
+      async (_, options) => {
+        assert.equal(options.redirect, "error");
+        return new Response("x".repeat(3_000_001), {
+          headers: { "content-type": "text/html" },
+        });
+      },
+    ),
+    /TOO_LARGE/,
+  );
+});
 test("search terminal SUCCESS cannot hide denied reading or expired jobs", () => {
   const read = {
     event: "step_update",
@@ -115,9 +221,11 @@ test("search terminal SUCCESS cannot hide denied reading or expired jobs", () =>
       read,
       {
         event: "result",
-        status: "SUCCESS",
-        response: JSON.stringify({ jobs }),
-        ...extra,
+        result: {
+          status: "SUCCESS",
+          response: JSON.stringify({ jobs }),
+          ...extra,
+        },
       },
     ]
       .map((x) => JSON.stringify(x))
