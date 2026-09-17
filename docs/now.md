@@ -131,3 +131,9 @@
 - 기본 Windows PowerShell 실행 정책으로 -File 실패. 정책 변경·우회 안 함. 현재 Codex bundled PowerShell로 동일시험 PASS 및 preview 생성. 실제 등록 예정 경로 artifacts/automation/startup-preview.json, 설명 docs/runner-startup.md. 런타임/CLI 설치경로 변경 시 재검토 필요.
 - 독립 검토에서 시험이 mutex를 확보하지 못한 경우의 경합을 지적해 자식 실행 전 중단하도록 수정, 재검증 PASS. Local mutex는 같은로그인세션의wrapper경유만 보호하며 직접node실행은 별개임을 안내.
 - 아직 예약작업 등록·기존 실행기 교체·로그아웃/로그인 없음. 사용자에게 작업1개등록 및 지금수동실행기교체·연결검증 범위로 승인 질문을 제시한 상태. 준비 코드/설명은 검증 후 develop에 반영하며 실제 등록은 답변 뒤 실행한다.
+
+## Windows 자동 시작 등록 및 직접 실행 확인 (2026-09-17)
+- 구체적인 등록범위·비밀번호없음·Limited·기존수동실행기교체 설명 후 사용자가 `다음`으로 진행 요청하여 JobCallender-Runner 1개 등록 완료. 사용자 Windows 로그인 트리거/Interactive Limited/IgnoreNew/WakeToRun=false 유지. 실행 정책이나 Google 권한은 변경하지 않음.
+- 실행중 작업0 확인 후 기존 수동PID21000 종료, Start-ScheduledTask로 실행. 예약작업 Running, 새 runner PID28260 1개 확인. 다시 시작 요청에서도 동일PID/1개 유지. DB의 검색수1·알림수4 불변, capability4개 true 및 연결 확인. 새 프로세스는 이전 exec session27582가 아닌 Windows 예약작업이 관리.
+- 증거 artifacts/automation/startup-installed.json, runner-restart-before.json/runner-restart-after.json. TaskScheduler의 Running 상태에서 결과267009는 실행중 상태로 기록되며 종료성공코드0 검증과 혼동하지 않음.
+- 실제 로그아웃/로그인·PC 절전복귀는 아직 미실행. 다음 실제 로그인 후 설정화면에서 연결 확인. 설정을 끄는 방법과 실행경로 변경 시 점검은 docs/runner-startup.md. 사용자 원본/경험 없음으로 실제 경험 기반 작성 전체 인수는 계속 미검증.
