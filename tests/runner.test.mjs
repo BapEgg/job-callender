@@ -143,8 +143,17 @@ test("search terminal SUCCESS cannot hide denied reading or expired jobs", () =>
     "SEARCH_FAILED",
   );
   assert.equal(
-    parseSearchOutput(output([{ deadline: null, closeType: "rolling" }])).result
-      .jobs.length,
+    parseSearchOutput(
+      output([
+        {
+          deadline: null,
+          closeType: "rolling",
+          currentStatus: "open",
+          statusEvidence: "접수중",
+          verifiedAt: new Date().toISOString(),
+        },
+      ]),
+    ).result.jobs.length,
     1,
   );
 });
