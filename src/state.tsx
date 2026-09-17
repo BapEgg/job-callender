@@ -630,6 +630,27 @@ export function FixtureProvider({ children }: { children: ReactNode }) {
   }
   const act: Action = (action, id = "", value = "", element) => {
     if (element) trigger.current = element;
+    if (action === "toggle-profile-option") {
+      const key = id.split("-").at(-1) as "skills" | "region" | "exclusions";
+      if (!["skills", "region", "exclusions"].includes(key)) return;
+      setForm((previous) => {
+        const entries = String(
+          previous[id] ?? stateRef.current.profile[key] ?? "",
+        )
+          .split(/[,，\n]/)
+          .map((item) => item.trim())
+          .filter(Boolean);
+        const selected = entries.some(
+          (item) => item.toLowerCase() === value.toLowerCase(),
+        );
+        const next = selected
+          ? entries.filter((item) => item.toLowerCase() !== value.toLowerCase())
+          : [...entries, value];
+        return { ...previous, [id]: next.join(", ") };
+      });
+      return;
+    }
+
     if (action === "slack-preview") {
       setModal({ kind: "slack-preview", title: "Slack 메시지 미리보기" });
       return;

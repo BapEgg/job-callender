@@ -1,5 +1,6 @@
 // Source-faithful JSX port of approved screen markup. No HTML parsing occurs at runtime.
 
+import { profileOptions } from "./profile-options";
 import { JobTable } from "./state";
 import { Icon } from "./icons";
 import { Children, Fragment } from "react";
@@ -188,6 +189,12 @@ export function createScreens(
     help: any = "",
     placeholder = "",
   ) {
+    const options =
+      profileOptions[name.split("-").at(-1) as keyof typeof profileOptions];
+    const selected = String(form[name] ?? value)
+      .split(/[,，\n]/)
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean);
     return (
       <div className="field">
         <label htmlFor={name}>{label}</label>
@@ -200,7 +207,37 @@ export function createScreens(
           placeholder={placeholder}
           autoComplete={type === "password" ? "current-password" : "off"}
         />
-        {help ? <span className="field-help">{help}</span> : null}
+        {options ? (
+          <>
+            <span className="field-help">
+              여러 개를 선택할 수 있어요. 목록에 없으면 위에 쉼표로 구분해 직접
+              입력하세요.
+            </span>
+            <div
+              className="row wrap"
+              role="group"
+              aria-label={`${label} 선택 목록`}
+              style={{ gap: 6 }}
+            >
+              {options.map((option) => {
+                const active = selected.includes(option.toLowerCase());
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    className={`btn small ${active ? "primary" : ""}`}
+                    aria-pressed={active}
+                    onClick={() => act("toggle-profile-option", name, option)}
+                  >
+                    {option}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        ) : help ? (
+          <span className="field-help">{help}</span>
+        ) : null}
       </div>
     );
   }
