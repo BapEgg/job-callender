@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import { draftOrQuestions, searchJobs } from "./adapters.mjs";
 import { deliver } from "./slack.mjs";
+import { notificationPump } from "./notifications.mjs";
 // Run this host process manually. OS autostart is intentionally not registered here.
 const base = process.env.JOBPREP_URL || "http://127.0.0.1:3000";
 if (!/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(base))
@@ -51,21 +52,32 @@ async function api(route, data = {}) {
   return r.json();
 }
 let stopping = false;
-process.on("SIGINT", () => {
-  stopping = true;
-});
-process.on("SIGTERM", () => {
-  stopping = true;
+const notifications = notificationPump({
+  api,
+  enabled: capabilities.slack,
+  send: (payload) => deliver(slackWebhook, payload),
+  onError: (message) => console.error(message),
 });
 const heartbeat = setInterval(
   () => api("/api/runner/heartbeat", { capabilities }).catch(() => {}),
   30000,
 );
+const notificationTimer = setInterval(() => {
+  void notifications.run();
+}, 30000);
+function stop() {
+  stopping = true;
+  clearInterval(notificationTimer);
+  void notifications.stop();
+}
+process.on("SIGINT", stop);
+process.on("SIGTERM", stop);
 try {
   while (!stopping) {
     try {
       await api("/api/runner/heartbeat", { capabilities });
       await api("/api/runner/tick");
+      void notifications.run();
       const { task } = await api("/api/runner/claim");
       if (task) {
         const cancellation = new AbortController();
@@ -99,27 +111,16 @@ try {
     } catch (e) {
       console.error("Runner unavailable; will check again in 30 seconds.");
     }
-    // Enable only after the user's separate actual-message approval. Secrets remain host-only.
-    if (slackApproved && slackWebhook) {
-      try {
-        const { notification } = await api("/api/runner/notifications/claim");
-        if (notification) {
-          const status = await deliver(slackWebhook, notification.payload);
-          await api("/api/runner/notifications/complete", {
-            userId: notification.userId,
-            key: notification.key,
-            status,
-          });
-        }
-      } catch {
-        console.error(
-          "Notification check unavailable; search results are preserved.",
-        );
-      }
+    if (stopping) break;
+    if (process.argv.includes("--once")) {
+      await notifications.run();
+      break;
     }
-    if (process.argv.includes("--once")) break;
+    void notifications.run();
     await new Promise((resolve) => setTimeout(resolve, 30000));
   }
 } finally {
   clearInterval(heartbeat);
+  clearInterval(notificationTimer);
+  await notifications.stop();
 }

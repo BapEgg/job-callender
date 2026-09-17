@@ -1,5 +1,13 @@
 # NOW — 현재 상태와 다음 작업
 
+## 최신 요약 — 검색 중 알림 확인 분리 (2026-09-17)
+- runner/notifications.mjs에 검색과 별개인 알림 처리 추가, main에서 30초마다 실행 시도. 이전 배치가 진행 중이면 겹치지 않으며 배치당 최대10건. 긴 AI 검색이 마감 후보 점검/알림 처리를 막지 않게 하는 목적이다. 네트워크/발송 지연까지 포함한 30초 이내 전달 보장은 아니다.
+- 알림 claim 시 uncertain 기록 후 발송하는 기존 중복 방지 유지. 결과 불명확 시 자동 재전송 없음. 종료 신호 즉시 새 알림 처리를 중단하고 이미 claim한 항목의 발송·완료만 기다림. 독립 검토의 종료 경계 P2 수정 후 재검토 통과.
+- 단위25/25 PASS(신규3: 단일 실행·종료/배치 제한/승인 off·결과 불명확). 긴 검색은 독립 Promise를 사용한 합성 시험이며 실제 장시간 CLI와 Slack을 결합한 시험은 미실행.
+- tests/runner-reconnect.integration.mjs 최종 코드 재실행 PASS: 격리 HTTP503 후 실제 실행기 프로세스의 tick/claim 재개. AI/Slack 비활성화, 실제 PC 절전복귀 시험은 아님.
+- 기존 JobCallender-Runner 예약작업 재시작, PID28260→29324 1개, Running. 실행중 작업0 확인 후 교체. 새 heartbeat 2026-09-17T14:08:27.900Z 확인, 검색1/알림4 불변·capability4개 true. 추가 시험 Slack 전송 없음. 증거 artifacts/automation/runner-restart-before.json 및 runner-restart-after.json.
+- 다음 작업 하나: 실행기 종료 시 실행 중인 CLI 하위프로세스 정리와 작업 복구 검증. 실제 로그인/절전복귀·실제 사용자 경험 기반 전체 흐름은 아직 미검증. 아래 항목들은 시간순 과거 기록이며 검색/자동시작 미완료 표시는 후속 완료 기록과 구분한다.
+
 ## 사용자 확정과 경계 (2026-09-17)
 - 승인된 개인용 로컬 15화면/React+TypeScript 구현. 원본 HTML 재디자인 금지. README는 추후 ELI5 방식으로 쉽게 보는 별도 안내를 작성할 때 다룬다.
 - 검증·비밀정보 검사 후 origin/develop 커밋/push 허용. main 반영/배포, 자료 삭제, OS 자동 시작 등록, 실제 Slack 전송은 별도 승인.
